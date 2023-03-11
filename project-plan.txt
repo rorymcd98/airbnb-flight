@@ -1,0 +1,80 @@
+High level plan for project structure:
+
+Content script
+  Search DOM for:
+    listingInformation[] = [{
+      destinationLocation,
+      dates,
+      guests: {
+        numAdults,
+        numChildren,
+        numInfants
+      }
+    }]
+
+  Get additional info from the widgets placed on the page:
+    {
+      showPricePerNight,
+    }
+
+  -> Sends this to the background script with an ID
+
+  <- Receives an object from the background script flightPricesData
+
+  Render flightPricesData
+
+Popup 
+  Set the user preferences:
+    userPreferences = {
+      departingLocation: string,
+      findInboundTickets: bool,
+      findOutboundTickets: bool,
+      multipleDepartingLocations: object[],
+      travelClassPreference: string,
+      airlineWhiteList[],
+      airlineBlackList[],
+      maxStops: number, (when 0, api call is set to nonStop)
+      maxPrice: number,
+      currencyCode: string, (inferred from the content script - maybe extension API has this info also),
+      latestDeparture,
+      earliestDeparture,
+      latestArrival,
+      earliestArrival,
+      showPricePerNight
+    }
+
+  Click a button to apply user settings
+
+
+Background script
+
+  <- Receive userPreferences from Popup
+  <- Receive listingInformation[] from Content script
+
+  Convert destination and departure location:
+  {
+    destinatinoAirportCode,
+    departingAirportCode
+  }
+
+  Call API given airportCodes, userPreferences, listingInformation[]:
+    ... Cache identical queries (e.g. same airports, same dates) to reduce API calls
+
+
+  Assemble an object for the content script (flightPricesData):
+  {
+    cheapestFlight : {
+
+    }
+    flightList: [{}...]
+  }
+
+  -> Send object to content script for rendering (flightPricesData)
+  
+  
+
+
+
+
+
+  
