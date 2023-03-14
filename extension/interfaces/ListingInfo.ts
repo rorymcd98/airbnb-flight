@@ -3,16 +3,16 @@
  * shared by background and content scripts 
  *  */ 
 
-export interface GuestCounter {
+interface IGuestCounter {
   adultsCount: number
   childrenCount: number
   infantsCount: number
 }
 
-export interface AirbnbListingInfo {
+export interface IAirbnbListingInfo {
   destinationLocation: string
   arrivalDate: Date
   departureDate: Date
-  guestCounter: GuestCounter
+  guestCounter: IGuestCounter
   currencyCode: string
 }
