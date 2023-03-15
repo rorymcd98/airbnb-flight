@@ -170,7 +170,7 @@ function checkChronological (date1: string, date2: string, time1?: string, time2
 }
 
 //The API demands originDestinations are in chronological order
-function originDestinationRefinementFunction (originDestinations: OriginDestination[]): boolean {
+function checkOriginDestinationsAreChronological (originDestinations: OriginDestination[]): boolean {
   if (originDestinations.length === 1) return true;
   for (let i = 0; i < originDestinations.length - 1; i++) {
     const cur = originDestinations[i];
@@ -185,7 +185,7 @@ function originDestinationRefinementFunction (originDestinations: OriginDestinat
   return true;
 }
 
-const originDestinationRefinmentParams = {
+const originDestinationsNotChronologicalError = {
  message: "The date/time of OriginDestination are not in chronological order."
 }
 
@@ -221,7 +221,7 @@ function checkSeatedPassengersWithinLimits(travelers: Traveler[]): boolean {
 
 export const FlightSearchBodySchema = z.object({
   currencyCode: z.string().regex(/^[A-Z]{3}$/).optional(),
-  originDestinations: z.array(originDestinationSchema).min(1).max(6).refine(originDestinationRefinementFunction, originDestinationRefinmentParams).refine(checkNoDuplicatesId, generateDuplicateIdParams("originDestination")),
+  originDestinations: z.array(originDestinationSchema).min(1).max(6).refine(checkOriginDestinationsAreChronological, originDestinationsNotChronologicalError).refine(checkNoDuplicatesId, generateDuplicateIdParams("originDestination")),
   travelers: z.array(travelerSchema).min(1).max(18).refine(checkNoDuplicatesId, generateDuplicateIdParams("traveler")).refine(checkSeatedPassengersWithinLimits, {message: "The total number of seated passengers must be between 1 and 9."}),
   sources: z.tuple([z.literal("GDS")]),
   searchCriteria: searchCriteriaSchema.optional()
