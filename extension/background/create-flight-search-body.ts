@@ -1,15 +1,21 @@
+import { z } from 'zod'
 import { loadObjectFromFile } from './object-storage'
-import { IFlightSearchBody } from '../interfaces/FlightSearchBody'
-import { IAirbnbListingInfo } from '../interfaces/ListingInfo'
-import { IUserPreferences } from '../interfaces/UserPreferences'
+import { FlightSearchBodySchema } from '../types-schemas/FlightSearchBody'
+import { AirbnbListingInfo } from '../types-schemas/ListingInfo'
+import { IUserPreferences } from '../types-schemas/UserPreferences'
+
 
 // const obj = await loadObjectFromFile('./../response.json')
 
-export const createFlightSearchBody = (userPreferences: IUserPreferences, airbnbListingInfo: IAirbnbListingInfo): IFlightSearchBody => { 
+type FlightSearchBody = z.infer<typeof FlightSearchBodySchema>;
+
+
+export const createFlightSearchBody = (userPreferences: IUserPreferences, airbnbListingInfo: AirbnbListingInfo): FlightSearchBody => { 
   
-  const mergedFlightSearchBody = {} as IFlightSearchBody;
+  const mergedFlightSearchBody = {} as FlightSearchBody;
+
+
 
   return mergedFlightSearchBody;
-
 }
 

@@ -1,7 +1,7 @@
+import { z } from 'zod'
 import Amadeus from 'amadeus'
 import dotenv from 'dotenv'
-import { IFlightSearchBody } from '../interfaces/FlightSearchBody'
-
+import { FlightSearchBody, FlightSearchBodySchema, DateTimeRange } from '../types-schemas/FlightSearchBody'
 dotenv.config()
 
 const clientId: string | undefined = process.env.API_KEY
@@ -10,9 +10,9 @@ const clientSecret: string | undefined = process.env.API_SECRET
 const amadeus = new Amadeus({
   clientId,
   clientSecret
-})
+});
 
-const flightSearchBody: IFlightSearchBody = {
+const flightSearchBody: FlightSearchBody = {
   currencyCode: "USD",
   originDestinations: [
     {
@@ -21,19 +21,47 @@ const flightSearchBody: IFlightSearchBody = {
       destinationLocationCode: "NYC",
       departureDateTimeRange: {
         date: "2023-03-20",
-        time: "00:00:00",
-      },
-    },
+        time: "10:00:00"
+      }
+    }
   ],
   travelers: [
     {
-      id: "ADT",
+      id: "1",
       travelerType: "ADULT"
     },
     {
-      id: "CNN",
+      id: "2",
       travelerType: "CHILD"
     },
+    {
+      id: "3",
+      travelerType: "CHILD"
+    },
+    {
+      id: "4",
+      travelerType: "CHILD"
+    },
+    {
+      id: "5",
+      travelerType: "CHILD"
+    },
+    {
+      id: "6",
+      travelerType: "CHILD"
+    },
+    {
+      id: "7",
+      travelerType: "CHILD"
+    },
+    {
+      id: "8",
+      travelerType: "CHILD"
+    },
+    {
+      id: "9",
+      travelerType: "CHILD"
+    }
   ],
   sources: ["GDS"],
   searchCriteria: {

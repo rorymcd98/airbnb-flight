@@ -29,7 +29,8 @@
     "typedoc": "^0.23.26",
     "typescript": "^4.9.5",
     "vite": "^4.1.4",
-    "vite-plugin-chrome-extension": "^0.0.7"
+    "vite-plugin-chrome-extension": "^0.0.7",
+    "zod": "^3.21.4"
   },
   "name": "airbnb-flight",
   "description": "Instantly find flight prices for Airbnb to find the cheapest locations and dates",
@@ -41,6 +42,7 @@
     "build": "vite build && tsc",
     "build-extension": "npm run build && copy /src/manifest.json /dist/",
     "preview": "vite preview",
+    "tsc": "tsc --watch",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint-fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "test": "jest --watch"
