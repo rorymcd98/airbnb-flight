@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { createFlightSearchBody } from '../create-flight-search-body';
+import { FlightSearchApi } from '../flight-search-api.class';
 import { FlightSearchBody, FlightSearchBodySchema } from '../../types-schemas/FlightSearchBody'
 import { AirbnbListingInfo} from '../../types-schemas/ListingInfo'
 import { UserPreferences } from '../../types-schemas/UserPreferences'
@@ -37,7 +37,9 @@ describe('createFlightSearchBody', () => {
       currencyCode: 'USD'
     };
 
-    const flightSearchBody = createFlightSearchBody(userPreferences, listingInfo);
+    const instanceOfFlightSearchApi = new FlightSearchApi(userPreferences, airbnbListingInfo);
+
+    const flightSearchBody: FlightSearchBody = instanceOfFlightSearchApi.createFlightSearchBody();
 
     // Expected output:
     const expectedFlightSearchBody: FlightSearchBody = {
