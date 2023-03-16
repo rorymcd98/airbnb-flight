@@ -6,54 +6,54 @@ import { UserPreferences, userPreferencesSchema } from './UserPreferences'
 import {describe, test, expect} from '@jest/globals';
 
 
-const goodFlightSearchBody: FlightSearchBody = {
-  "currencyCode": "USD",
-  "originDestinations": [
-    {
-      "id": "0",
-      "originLocationCode": "NYC",
-      "destinationLocationCode": "MAD",
-      "departureDateTimeRange": {
-        "date": "2023-11-01",
-        "time": "10:00:00"
-      }
-    },
-    {
-      "id": "1",
-      "originLocationCode": "NYC",
-      "destinationLocationCode": "MAD",
-      "departureDateTimeRange": {
-        "date": "2023-12-01",
-        "time": "10:00:00"
-      }
-    }
-  ],
-  "travelers": [
-    {
-      "id": "0",
-      "travelerType": "ADULT"
-    }
-  ],
-  "sources": [
-    "GDS"
-  ],
-  "searchCriteria": {
-    "maxFlightOffers": 2,
-    "flightFilters": {
-      "cabinRestrictions": [
-        {
-          "cabin": "BUSINESS",
-          "coverage": "MOST_SEGMENTS",
-          "originDestinationIds": [
-            "1"
-          ]
-        }
-      ]
-    }
-  }
-};
-
 describe('FlightSearchBody Schema checker', () => {
+  const goodFlightSearchBody: FlightSearchBody = {
+    "currencyCode": "USD",
+    "originDestinations": [
+      {
+        "id": "0",
+        "originLocationCode": "NYC",
+        "destinationLocationCode": "MAD",
+        "departureDateTimeRange": {
+          "date": "2023-11-01",
+          "time": "10:00:00"
+        }
+      },
+      {
+        "id": "1",
+        "originLocationCode": "NYC",
+        "destinationLocationCode": "MAD",
+        "departureDateTimeRange": {
+          "date": "2023-12-01",
+          "time": "10:00:00"
+        }
+      }
+    ],
+    "travelers": [
+      {
+        "id": "0",
+        "travelerType": "ADULT"
+      }
+    ],
+    "sources": [
+      "GDS"
+    ],
+    "searchCriteria": {
+      "maxFlightOffers": 2,
+      "flightFilters": {
+        "cabinRestrictions": [
+          {
+            "cabin": "BUSINESS",
+            "coverage": "MOST_SEGMENTS",
+            "originDestinationIds": [
+              "1"
+            ]
+          }
+        ]
+      }
+    }
+  };
+
   test('should pass the goodFlightSearchBody', () => {
     expect(FlightSearchBodySchema.safeParse(goodFlightSearchBody).success).toBe(true);
   })
@@ -103,7 +103,7 @@ describe('FlightSearchBody Schema checker', () => {
 
 describe('userPreferencesSchema', () => {
   test('should validate a valid user preferences object', () => {
-    const userPreferences = {
+    const userPreferences: UserPreferences =  {
       departingLocations: ['LHR'],
       searchOutboundFlight: true,
       searchReturnFlight: true,
@@ -124,7 +124,7 @@ describe('userPreferencesSchema', () => {
   });
 
   test('should not validate an invalid user preferences object with inconsistent times', () => {
-    const userPreferences = {
+    const userPreferences: UserPreferences =  {
       departingLocations: ['LHR'],
       searchOutboundFlight: true,
       searchReturnFlight: true,
@@ -147,7 +147,7 @@ describe('userPreferencesSchema', () => {
   });
 
   test('should not validate an invalid user preferences object with invalid departingLocations', () => {
-    const userPreferences = {
+    const userPreferences: UserPreferences =  {
       departingLocations: ['lhr'],
       searchOutboundFlight: true,
       searchReturnFlight: true,
@@ -170,7 +170,7 @@ describe('userPreferencesSchema', () => {
   });
 
   test('should through an error if there is no selected travelClass', () => {
-    const userPreferences = {
+    const userPreferences: UserPreferences =  {
       departingLocations: ['LHR'],
       searchOutboundFlight: true,
       searchReturnFlight: true,
@@ -192,4 +192,86 @@ describe('userPreferencesSchema', () => {
     );
   });
 
+});
+
+
+describe('airbnbListingInfoSchema', () => {
+  test('validates with correct airbnbListingInfo', () => {
+    const airbnbListingInfo: AirbnbListingInfo  ={
+      destinationLocation: 'ABC123',
+      arrivalDate: new Date('2023-03-16'),
+      departureDate: new Date('2023-03-20'),
+      guestCounter: {
+        adultsCount: 2,
+        childrenCount: 1,
+        infantsCount: 0
+      },
+      currencyCode: 'USD'
+    };
+    expect(airbnbListingInfoSchema.parse(airbnbListingInfo)).toEqual(airbnbListingInfo);
+  });
+
+  test('throws an error if arrival date is after departure date', () => {
+    const airbnbListingInfo: AirbnbListingInfo  ={
+      destinationLocation: 'ABC123',
+      arrivalDate: new Date('2023-03-20'),
+      departureDate: new Date('2023-03-16'),
+      guestCounter: {
+        adultsCount: 2,
+        childrenCount: 1,
+        infantsCount: 0
+      },
+      currencyCode: 'USD'
+    };
+    expect(() => airbnbListingInfoSchema.parse(airbnbListingInfo)).toThrow('Arrival date must be before departure date');
+  });
+
+  test('throws an error if adultsCount is less than 1', () => {
+    const airbnbListingInfo: AirbnbListingInfo  ={
+      destinationLocation: 'ABC123',
+      arrivalDate: new Date('2023-03-16'),
+      departureDate: new Date('2023-03-20'),
+      guestCounter: {
+        adultsCount: 0,
+        childrenCount: 1,
+        infantsCount: 0
+      },
+      currencyCode: 'USD'
+    };
+    expect(() => airbnbListingInfoSchema.parse(airbnbListingInfo)).toThrowError(
+      /Number must be greater than or equal to 1/
+    );
+  });
+
+  test('throws an error if childrenCount is less than 0', () => {
+    const airbnbListingInfo: AirbnbListingInfo  ={
+      destinationLocation: 'ABC123',
+      arrivalDate: new Date('2023-03-16'),
+      departureDate: new Date('2023-03-20'),
+      guestCounter: {
+        adultsCount: 2,
+        childrenCount: -1,
+        infantsCount: 0
+      },
+      currencyCode: 'USD'
+    };
+    expect(() => airbnbListingInfoSchema.parse(airbnbListingInfo)).toThrowError(
+      /Number must be greater than or equal to 0/
+    );
+  });
+
+  test('throws an error if currencyCode is not in ISO 4217 format', () => {
+    const airbnbListingInfo: AirbnbListingInfo  ={
+    destinationLocation: 'ABC123',
+    arrivalDate: new Date('2023-03-16'),
+    departureDate: new Date('2023-03-20'),
+    guestCounter: {
+    adultsCount: 2,
+    childrenCount: 1,
+    infantsCount: 0
+    },
+    currencyCode: 'US'
+    };
+    expect(() => airbnbListingInfoSchema.parse(airbnbListingInfo)).toThrow(/invalid/);
+    });
 });

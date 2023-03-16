@@ -7,27 +7,34 @@ import {describe, test, expect} from '@jest/globals';
 
 describe('createFlightSearchBody', () => {
   test('should create a valid FlightSearchParam object for outbound flight only', () => {
-    const userPreferences: UserPreferences = {
-      departingLocations: ["LAX"],
+    const userPreferences: UserPreferences =  {
+      departingLocations: ['LHR'],
       searchOutboundFlight: true,
-      searchReturnFlight: false,
-      travelClass: ["ECONOMY"],
-      airlineWhiteList: [],
-      airlineBlackList: [],
+      searchReturnFlight: true,
+      travelClasses: {
+        ECONOMY: false,
+        PREMIUM_ECONOMY: false,
+        BUSINESS: false,
+        FIRST: false,
+      },
       maxStops: 1,
       maxPrice: 500,
-      earliestDepartureTime: 0,
-      latestDepartureTime: 24,
-      earliestArrivalTime: 0,
-      latestArrivalTime: 24,
+      earliestDepartureTime: 6,
+      latestDepartureTime: 12,
+      earliestArrivalTime: 8,
+      latestArrivalTime: 14,
     };
 
-    const listingInfo: IAirbnbListingInfo = {
-      destinationLocation: "NYC",
-      arrivalDate: new Date("2023-03-20"),
-      departureDate: new Date("2023-03-30"),
-      guestCounter: { adultsCount: 2, childrenCount: 1, infantsCount: 0 },
-      currencyCode: "USD",
+    const airbnbListingInfo: AirbnbListingInfo  ={
+      destinationLocation: 'ABC123',
+      arrivalDate: new Date('2023-03-16'),
+      departureDate: new Date('2023-03-20'),
+      guestCounter: {
+        adultsCount: 2,
+        childrenCount: 1,
+        infantsCount: 0
+      },
+      currencyCode: 'USD'
     };
 
     const flightSearchBody = createFlightSearchBody(userPreferences, listingInfo);

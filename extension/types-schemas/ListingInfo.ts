@@ -5,7 +5,6 @@ import { z } from "zod"
  * shared by background and content scripts 
  *  */ 
 
-
 const guestCounterSchema = z.object({
   adultsCount: z.number().min(1),
   childrenCount: z.number().min(0),
@@ -35,7 +34,7 @@ export const airbnbListingInfoSchema = z.object({
  * @param {string} destinationLocation is the destination location code
  * @param {Date} arrivalDate is the arrival date
  * @param {Date} departureDate is the departure date 
- * @param {guestCounter} GuestCounter inferred from the Airbnb page
- * @param {string} currencyCode inferred from the listing (ISO 4217 format - defaults to USD)
+ * @param {GuestCounter} guestCounter inferred from the Airbnb page
+ * @param {string} currencyCode inferred from the listing (ISO 4217 format)
  * */
 export type AirbnbListingInfo = z.infer<typeof airbnbListingInfoSchema>;
