@@ -10,12 +10,24 @@ import { UserPreferences } from '../types-schemas/UserPreferences'
 type FlightSearchBody = z.infer<typeof FlightSearchBodySchema>;
 
 
-export const createFlightSearchBody = (userPreferences: UserPreferences, airbnbListingInfo: AirbnbListingInfo): FlightSearchBody => { 
+// export class FlightSearchApi (userPreferences: UserPreferences, airbnbListingInfo: AirbnbListingInfo): FlightSearchBody => { 
   
-  const mergedFlightSearchBody = {} as FlightSearchBody;
+//   const mergedFlightSearchBody = {} as FlightSearchBody;
 
 
 
-  return mergedFlightSearchBody;
+//   return mergedFlightSearchBody;
+// }
+
+
+export class FlightSearchApi {
+  constructor(
+    private userPreferences: UserPreferences,
+    private airbnbListingInfo: AirbnbListingInfo
+  ) {}
+
+  public async createFlightSearchBody(): Promise<FlightSearchBody> {
+    const mergedFlightSearchBody = {} as FlightSearchBody;
+    return mergedFlightSearchBody;
+  }
 }
-
