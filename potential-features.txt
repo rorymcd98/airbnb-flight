@@ -1,0 +1,14 @@
+Integrate ticket buying pipeline
+
+User preferences
+  Multiple passengers
+    Criteria for each passenger
+  Multiple locations
+  Selecting seated vs held infants
+  Elaborate on search Criteria
+
+
+User pain points:
+  "Are there better dates?"
+  "Can you show this to me graphically?"
+  

@@ -26,10 +26,10 @@ Content script
 Popup 
   Set the user preferences:
     userPreferences = {
-      departingLocation: string,
+      originLocation: string,
       findInboundTickets: bool,
       findOutboundTickets: bool,
-      multipleDepartingLocations: object[],
+      multipleoriginLocations: object[],
       travelClassPreference: string,
       airlineWhiteList[],
       airlineBlackList[],

@@ -1,16 +1,10 @@
 import { z } from 'zod'
-import Amadeus from 'amadeus'
 import dotenv from 'dotenv'
 import { FlightSearchBody, FlightSearchBodySchema, DateTimeRange } from '../types-schemas/FlightSearchBody'
 dotenv.config()
 
 const clientId: string | undefined = process.env.API_KEY
 const clientSecret: string | undefined = process.env.API_SECRET
-
-const amadeus = new Amadeus({
-  clientId,
-  clientSecret
-});
 
 const flightSearchBody: FlightSearchBody = {
   currencyCode: "USD",
@@ -21,8 +15,8 @@ const flightSearchBody: FlightSearchBody = {
       destinationLocationCode: "NYC",
       departureDateTimeRange: {
         date: "2023-03-20",
-        time: "10:00:00",
-        timeWindow: "1H"
+        time: "23:59:59",
+        timeWindow: "12H"
       }
     }
   ],
@@ -34,24 +28,67 @@ const flightSearchBody: FlightSearchBody = {
   ],
   sources: ["GDS"],
   searchCriteria: {
-    maxFlightOffers: 50,
+    maxFlightOffers: 24,
     flightFilters: {
       cabinRestrictions: [
         {
-          cabin: "ECONOMY",
-          coverage: "MOST_SEGMENTS",
+          cabin: "BUSINESS",
           originDestinationIds: ["1"],
-        },
-      ]
+        }
+      ],
+      connectionRestrictions: {
+        maxNumberOfConnections: 0,
+        nonStopPreferred: true,
+        nonStopPreferredWeight: 100,
+      },
+      
     },
   },
 };
 
-const res = await amadeus.shopping.flightOffersSearch.post(JSON.stringify(flightSearchBody))
+import axios from 'axios';
 
-console.log(res.data.forEach((flightOffer: any) => {
-  const arr =[];
-  arr.push(flightOffer.itineraries[0].segments[0].departure.at)
-  arr.sort()
-  console.log(arr)
-}))
+const res = await searchFlightOffers(clientId, clientSecret, flightSearchBody);
+
+const arr =[];
+
+res.data.forEach((flightOffer: any) => {
+
+  arr.push(flightOffer.travelerPricings[0].fareDetailsBySegment.length)
+
+})
+
+arr.sort()
+console.log(arr.filter((el)=>{return el == 1}))
+
+async function searchFlightOffers(clientId, clientSecret, requestBody) {
+  const apiUrl = 'https://test.api.amadeus.com/v2/shopping/flight-offers';
+  const p = await getAccessToken(clientId, clientSecret);
+
+  try {
+    const response = await axios.post(apiUrl, requestBody, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${p['access_token']}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    throw new Error(`Failed to search for flight offers: ${error.message}`);
+  }
+}
+
+
+async function getAccessToken(clientId, clientSecret) {
+  const tokenUrl = 'https://test.api.amadeus.com/v1/security/oauth2/token';
+  const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+  const data = `grant_type=client_credentials&client_id=${clientId}&client_secret=${clientSecret}`;
+
+  try {
+    const response = await axios.post(tokenUrl, data, { headers });
+    return response.data;
+  } catch (error) {
+    console.log(error);
+  }
+}

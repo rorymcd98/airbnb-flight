@@ -104,7 +104,7 @@ describe('FlightSearchBody Schema checker', () => {
 describe('userPreferencesSchema', () => {
   test('should validate a valid user preferences object', () => {
     const userPreferences: UserPreferences =  {
-      departingLocations: ['LHR'],
+      originLocation: 'LHR',
       searchOutboundFlight: true,
       searchReturnFlight: true,
       travelClasses: {
@@ -115,17 +115,25 @@ describe('userPreferencesSchema', () => {
       },
       maxStops: 1,
       maxPrice: 500,
-      earliestDepartureTime: 6,
-      latestDepartureTime: 12,
-      earliestArrivalTime: 8,
-      latestArrivalTime: 14,
+      outboundTimeWindow: {
+        earliestDepartureTime: 6,
+        latestDepartureTime: 12,
+        earliestArrivalTime: 12,
+        latestArrivalTime: 18
+      },
+      returnTimeWindow: {
+        earliestDepartureTime: 0,
+        latestDepartureTime: 24,
+        earliestArrivalTime: 0,
+        latestArrivalTime: 24
+      }
     };
     expect(() => userPreferencesSchema.parse(userPreferences)).not.toThrow();
   });
 
-  test('should not validate an invalid user preferences object with inconsistent times', () => {
+  test('Should fill in the default time values for timeWindows (0, 24)', () => {
     const userPreferences: UserPreferences =  {
-      departingLocations: ['LHR'],
+      originLocation: 'LHR',
       searchOutboundFlight: true,
       searchReturnFlight: true,
       travelClasses: {
@@ -136,19 +144,70 @@ describe('userPreferencesSchema', () => {
       },
       maxStops: 1,
       maxPrice: 500,
-      earliestDepartureTime: 14,
-      latestDepartureTime: 12,
-      earliestArrivalTime: 16,
-      latestArrivalTime: 8,
+      outboundTimeWindow: {
+
+      } as any,
+      returnTimeWindow: {
+        earliestDepartureTime: 1,
+        latestDepartureTime: 19
+      } as any
+    };
+
+    const $ = userPreferencesSchema.parse(userPreferences);
+    const parsedReturnTimeWindow = $.returnTimeWindow;
+    const parsedOutboundimeWindow = $.outboundTimeWindow;
+
+    const expectedOutboundTimeWindow = {
+      earliestDepartureTime: 0,
+      latestDepartureTime: 24,
+      earliestArrivalTime: 0,
+      latestArrivalTime: 24
+    }
+    const expectedReturnTimeWindow = {
+      earliestDepartureTime: 1,
+      latestDepartureTime: 19,
+      earliestArrivalTime: 0,
+      latestArrivalTime: 24
+    }
+    expect(parsedOutboundimeWindow).toStrictEqual(expectedOutboundTimeWindow);
+    expect(parsedReturnTimeWindow).toStrictEqual(expectedReturnTimeWindow);
+  });
+
+
+  test('should not validate an invalid user preferences object with inconsistent times', () => {
+    const userPreferences: UserPreferences =  {
+      originLocation: 'LHR',
+      searchOutboundFlight: true,
+      searchReturnFlight: true,
+      travelClasses: {
+        ECONOMY: true,
+        PREMIUM_ECONOMY: false,
+        BUSINESS: true,
+        FIRST: false,
+      },
+      maxStops: 1,
+      maxPrice: 500,
+      outboundTimeWindow: {
+        earliestDepartureTime: 16,
+        latestDepartureTime: 12,
+        earliestArrivalTime: 12,
+        latestArrivalTime: 1
+      },
+      returnTimeWindow: {
+        earliestDepartureTime: 10,
+        latestDepartureTime: 2,
+        earliestArrivalTime: 10,
+        latestArrivalTime: 2
+      }
     };
     expect(() => userPreferencesSchema.parse(userPreferences)).toThrowError(
       'Earliest departure/arrival time must be before latest departure/arrival time.',
     );
   });
 
-  test('should not validate an invalid user preferences object with invalid departingLocations', () => {
+  test('should not validate an invalid user preferences object with invalid originLocation', () => {
     const userPreferences: UserPreferences =  {
-      departingLocations: ['lhr'],
+      originLocation: 'lhr',
       searchOutboundFlight: true,
       searchReturnFlight: true,
       travelClasses: {
@@ -159,10 +218,18 @@ describe('userPreferencesSchema', () => {
       },
       maxStops: 1,
       maxPrice: 500,
-      earliestDepartureTime: 6,
-      latestDepartureTime: 12,
-      earliestArrivalTime: 8,
-      latestArrivalTime: 14,
+      outboundTimeWindow: {
+        earliestDepartureTime: 6,
+        latestDepartureTime: 12,
+        earliestArrivalTime: 12,
+        latestArrivalTime: 18
+      },
+      returnTimeWindow: {
+        earliestDepartureTime: 0,
+        latestDepartureTime: 24,
+        earliestArrivalTime: 0,
+        latestArrivalTime: 24
+      }
     };
     expect(() => userPreferencesSchema.parse(userPreferences)).toThrowError(
       /invalid_string/
@@ -171,7 +238,7 @@ describe('userPreferencesSchema', () => {
 
   test('should through an error if there is no selected travelClass', () => {
     const userPreferences: UserPreferences =  {
-      departingLocations: ['LHR'],
+      originLocation: 'LHR',
       searchOutboundFlight: true,
       searchReturnFlight: true,
       travelClasses: {
@@ -182,10 +249,18 @@ describe('userPreferencesSchema', () => {
       },
       maxStops: 1,
       maxPrice: 500,
-      earliestDepartureTime: 6,
-      latestDepartureTime: 12,
-      earliestArrivalTime: 8,
-      latestArrivalTime: 14,
+      outboundTimeWindow: {
+        earliestDepartureTime: 6,
+        latestDepartureTime: 12,
+        earliestArrivalTime: 12,
+        latestArrivalTime: 18
+      },
+      returnTimeWindow: {
+        earliestDepartureTime: 0,
+        latestDepartureTime: 24,
+        earliestArrivalTime: 0,
+        latestArrivalTime: 24
+      }
     };
     expect(() => userPreferencesSchema.parse(userPreferences)).toThrowError(
       "At least one travel class must be selected."
@@ -199,8 +274,8 @@ describe('airbnbListingInfoSchema', () => {
   test('validates with correct airbnbListingInfo', () => {
     const airbnbListingInfo: AirbnbListingInfo  ={
       destinationLocation: 'ABC123',
-      arrivalDate: new Date('2023-03-16'),
-      departureDate: new Date('2023-03-20'),
+      outboundDate: new Date('2023-03-16'),
+      returnDate: new Date('2023-03-20'),
       guestCounter: {
         adultsCount: 2,
         childrenCount: 1,
@@ -211,11 +286,11 @@ describe('airbnbListingInfoSchema', () => {
     expect(airbnbListingInfoSchema.parse(airbnbListingInfo)).toEqual(airbnbListingInfo);
   });
 
-  test('throws an error if arrival date is after departure date', () => {
+  test('throws an error if outbound date is after return date', () => {
     const airbnbListingInfo: AirbnbListingInfo  ={
       destinationLocation: 'ABC123',
-      arrivalDate: new Date('2023-03-20'),
-      departureDate: new Date('2023-03-16'),
+      outboundDate: new Date('2023-03-20'),
+      returnDate: new Date('2023-03-16'),
       guestCounter: {
         adultsCount: 2,
         childrenCount: 1,
@@ -223,14 +298,14 @@ describe('airbnbListingInfoSchema', () => {
       },
       currencyCode: 'USD'
     };
-    expect(() => airbnbListingInfoSchema.parse(airbnbListingInfo)).toThrow('Arrival date must be before departure date');
+    expect(() => airbnbListingInfoSchema.parse(airbnbListingInfo)).toThrowError('Outbound date must be before return date');
   });
 
   test('throws an error if adultsCount is less than 1', () => {
     const airbnbListingInfo: AirbnbListingInfo  ={
       destinationLocation: 'ABC123',
-      arrivalDate: new Date('2023-03-16'),
-      departureDate: new Date('2023-03-20'),
+      outboundDate: new Date('2023-03-16'),
+      returnDate: new Date('2023-03-20'),
       guestCounter: {
         adultsCount: 0,
         childrenCount: 1,
@@ -246,8 +321,8 @@ describe('airbnbListingInfoSchema', () => {
   test('throws an error if childrenCount is less than 0', () => {
     const airbnbListingInfo: AirbnbListingInfo  ={
       destinationLocation: 'ABC123',
-      arrivalDate: new Date('2023-03-16'),
-      departureDate: new Date('2023-03-20'),
+      outboundDate: new Date('2023-03-16'),
+      returnDate: new Date('2023-03-20'),
       guestCounter: {
         adultsCount: 2,
         childrenCount: -1,
@@ -263,8 +338,8 @@ describe('airbnbListingInfoSchema', () => {
   test('throws an error if currencyCode is not in ISO 4217 format', () => {
     const airbnbListingInfo: AirbnbListingInfo  ={
     destinationLocation: 'ABC123',
-    arrivalDate: new Date('2023-03-16'),
-    departureDate: new Date('2023-03-20'),
+    outboundDate: new Date('2023-03-16'),
+    returnDate: new Date('2023-03-20'),
     guestCounter: {
     adultsCount: 2,
     childrenCount: 1,

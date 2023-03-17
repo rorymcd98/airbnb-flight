@@ -1,6 +1,10 @@
 
 import { z } from "zod"
 
+
+  //***************************************************//
+ //*** Definition for DateTimeRange Type and Schema **//
+//***************************************************//
 const dateTimeRangeSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   dateWindow: z.string().regex(/^[MPI][1-3]D$/).optional(),
@@ -19,19 +23,30 @@ const dateTimeRangeSchema = z.object({
  * */
 export type DateTimeRange = z.infer<typeof dateTimeRangeSchema>;
 
-const travelerSchema = z.object({
+  //**********************************************//
+ //*** Definition for Traveler Type and Schema **//
+//**********************************************//
+
+const travelerSchemaWithoutHeldInfant = z.object({
   id: z.string(),
   travelerType: z.union([
     z.literal("ADULT"),
     z.literal("CHILD"),
     z.literal("SENIOR"),
     z.literal("YOUNG"),
-    z.literal("HELD_INFANT"),
     z.literal("SEATED_INFANT"),
     z.literal("STUDENT")
-  ]),
-  associatedAdultId: z.string().optional()
+  ])
 })
+
+const travelerSchemaWithHeldInfant = z.object({
+  id: z.string(),
+  travelerType: z.literal("HELD_INFANT"),
+  associatedAdultId: z.string()
+});
+
+const travelerSchema = z.union([travelerSchemaWithoutHeldInfant, travelerSchemaWithHeldInfant]);
+
 /**
  * @typedef Traveler defines who the passenger is for the purpose of ticket pricing (Traveler ID becomes associated with a originDestination object)
  * 
@@ -41,6 +56,13 @@ const travelerSchema = z.object({
  */
 export type Traveler = z.infer<typeof travelerSchema>;
 
+/**
+ * Refine function to check that seated infants have an associated adult
+ */
+
+  //****************************************************//
+ //*** Definition for SearchCriteria Type and Schema **//
+//****************************************************//
 const searchCriteriaSchema = z.object({
   excludeAllotments: z.boolean().optional(),
   addOneWayOffers: z.boolean().optional(),
@@ -115,10 +137,15 @@ const searchCriteriaSchema = z.object({
 /**
  * @typedef SearchCriteria defines the max number of flight offers to return and the flight filters (cabin restrictions and carrier restrictions)
  * 
- * @remarks Entirely optional, will backfill this depending on which are used (dev)
- * 
+ * @remarks Entirely optional, I will backfill this depending on which are used (dev)
  * */
 export type SearchCriteria = z.infer<typeof searchCriteriaSchema>;
+
+
+
+  //*******************************************************//
+ //*** Definition for originDestination Type and Schema **//
+//*******************************************************//
 
 /**
  * @typedef locationCode is a string which must be a valid IATA airport or city code (https://www.iata.org/en/publications/directories/code-search/)
@@ -138,7 +165,6 @@ const originDestinationSchema = z.object({
   includeConnectionPoints: z.array(locationCode).min(1).max(3).optional(),
   excludeConnectionPoints: z.array(locationCode).min(1).max(3).optional()
 })
-
 /**
  * @typedef originDestination defines a pair of origins and destinatons which a traveller may fly between - including information about the departure and arrival date and time, location code, and options for alternative locations
  * 
@@ -156,44 +182,38 @@ const originDestinationSchema = z.object({
  * @param {string[]} includeConnectionPoints is an array of location codes to include as connection points
  * @param {string[]} excludeConnectionPoints is an array of location codes to exclude as connection points
  *  */ 
-type OriginDestination = z.infer<typeof originDestinationSchema>;
+export type OriginDestination = z.infer<typeof originDestinationSchema>;
 
-function checkChronological (date1: string, date2: string, time1?: string, time2?: string): boolean{
-  const dateObject1 = createDateObject(date1, time1);
-  const dateObject2 = createDateObject(date2, time2);
-  return dateObject1 < dateObject2;
+  //******************************************************//
+ //*** Definition for FlightSearchBody Type and Schema **//
+//******************************************************//
+export const FlightSearchBodySchema = z.object({
+  currencyCode: z.string().regex(/^[A-Z]{3}$/).optional(),
+  originDestinations: z.array(originDestinationSchema).min(1).max(6).refine(checkOriginDestinationsAreChronological, {message: "The date/time of OriginDestination are not in chronological order."}).refine(checkNoDuplicatesId, generateDuplicateIdParams("originDestination")),
+  travelers: z.array(travelerSchema).min(1).max(18).refine(checkNoDuplicatesId, generateDuplicateIdParams("traveler"))
+                                    .refine(checkSeatedPassengersWithinLimits, {message: "The total number of seated passengers must be between 1 and 9."})
+                                    .refine(checkEnoughAdultsPerInfants, {message: "At least 1 adult is needed per unseated infant."}),
+  sources: z.tuple([z.literal("GDS")]),
+  searchCriteria: searchCriteriaSchema.optional()
+})
 
-  function createDateObject (date: string, time?: string): Date{
-    const dateObject = new Date(`${date} ${time ? time : "00:00"}`);
-    return dateObject;
-  }
-}
+/**
+ * @typedef FlightSearchBody defines the shape of the flight offers search POST request body
+ * @param {string} currencyCode for flight prices (ISO 4217 format - defaults to USD) - inferred from Airbnb listing
+ * @param {OriginDestination[]} originDestinations array of OriginDestination objects (min: 1, max: 6)
+ * @param {Traveler[]} travelers an array of traveler objects (min: 1, max: 18)
+ * @param {string[]} sources is an array of strings that contain the source of the flight offer (currently only "GDS")
+ * @param {SearchCriteria} searchCriteria is an object that contains the max flight offers and flight filters (cabin restrictions and carrier restrictions)
+ *  */ 
+export type FlightSearchBody = z.infer<typeof FlightSearchBodySchema>;
 
-//The API demands originDestinations are in chronological order
-function checkOriginDestinationsAreChronological (originDestinations: OriginDestination[]): boolean {
-  if (originDestinations.length === 1) return true;
-  for (let i = 0; i < originDestinations.length - 1; i++) {
-    const cur = originDestinations[i];
-    const next = originDestinations[i + 1];
-    const curDateTimeRange = cur.departureDateTimeRange ? cur.departureDateTimeRange! : cur.arrivalDateTimeRange!;
-    const nextDateTimeRange = next.departureDateTimeRange ? next.departureDateTimeRange! : next.arrivalDateTimeRange!;
-
-    if (!checkChronological(curDateTimeRange.date, nextDateTimeRange.date, curDateTimeRange.time, nextDateTimeRange.time)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-const originDestinationsNotChronologicalError = {
- message: "The date/time of OriginDestination are not in chronological order."
-}
-
+/**
+ * Refinement functions for FlightSearchBody schema
+ */
 interface HasId {
   id: string;
   [key: string]: any;
 }
-
 function checkNoDuplicatesId<T extends HasId>(arr: T[]): boolean {
   const idSet = new Set<string>();
   for (const obj of arr) {
@@ -219,20 +239,34 @@ function checkSeatedPassengersWithinLimits(travelers: Traveler[]): boolean {
   return totalSeatedPassengers >= 1 && totalSeatedPassengers <= 9;
 }
 
-export const FlightSearchBodySchema = z.object({
-  currencyCode: z.string().regex(/^[A-Z]{3}$/).optional(),
-  originDestinations: z.array(originDestinationSchema).min(1).max(6).refine(checkOriginDestinationsAreChronological, originDestinationsNotChronologicalError).refine(checkNoDuplicatesId, generateDuplicateIdParams("originDestination")),
-  travelers: z.array(travelerSchema).min(1).max(18).refine(checkNoDuplicatesId, generateDuplicateIdParams("traveler")).refine(checkSeatedPassengersWithinLimits, {message: "The total number of seated passengers must be between 1 and 9."}),
-  sources: z.tuple([z.literal("GDS")]),
-  searchCriteria: searchCriteriaSchema.optional()
-})
+function checkChronological (date1: string, date2: string, time1?: string, time2?: string): boolean{
+  const dateObject1 = createDateObject(date1, time1);
+  const dateObject2 = createDateObject(date2, time2);
+  return dateObject1 < dateObject2;
 
-/**
- * @typedef FlightSearchBody defines the shape of the flight offers search POST request body
- * @param {string} currencyCode for flight prices (ISO 4217 format - defaults to USD) - inferred from Airbnb listing
- * @param {OriginDestination[]} originDestinations array of OriginDestination objects (min: 1, max: 6)
- * @param {Traveler[]} travelers an array of traveler objects (min: 1, max: 18)
- * @param {string[]} sources is an array of strings that contain the source of the flight offer (currently only "GDS")
- * @param {SearchCriteria} searchCriteria is an object that contains the max flight offers and flight filters (cabin restrictions and carrier restrictions)
- *  */ 
-export type FlightSearchBody = z.infer<typeof FlightSearchBodySchema>;
+  function createDateObject (date: string, time?: string): Date{
+    const dateObject = new Date(`${date} ${time ? time : "00:00"}`);
+    return dateObject;
+  }
+}
+//The API demands originDestinations are in chronological order
+function checkOriginDestinationsAreChronological (originDestinations: OriginDestination[]): boolean {
+  if (originDestinations.length === 1) return true;
+  for (let i = 0; i < originDestinations.length - 1; i++) {
+    const cur = originDestinations[i];
+    const next = originDestinations[i + 1];
+    const curDateTimeRange = cur.departureDateTimeRange ? cur.departureDateTimeRange! : cur.arrivalDateTimeRange!;
+    const nextDateTimeRange = next.departureDateTimeRange ? next.departureDateTimeRange! : next.arrivalDateTimeRange!;
+
+    if (!checkChronological(curDateTimeRange.date, nextDateTimeRange.date, curDateTimeRange.time, nextDateTimeRange.time)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function checkEnoughAdultsPerInfants (travelers: Traveler[]): boolean {
+  const infants = travelers.filter(traveler => traveler.travelerType === "SEATED_INFANT" || traveler.travelerType === "HELD_INFANT");
+  const adults = travelers.filter(traveler => traveler.travelerType === "ADULT");
+  return adults.length >= infants.length;
+}
