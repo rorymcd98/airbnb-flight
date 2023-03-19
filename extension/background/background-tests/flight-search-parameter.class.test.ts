@@ -111,12 +111,12 @@ describe('FlightSearchParameter class', () => {
     })
   });
 
-  test('the .hashify() method should hash two closely equivalent userPreferences and airbnbListingInfo objects to the same string.', () => {
+  test('the .hashifyInstance() method should hash two closely equivalent userPreferences and airbnbListingInfo objects to the same string when they become instances of the class.', () => {
     const userPreferences1: UserPreferences =  {
       originLocation: 'LHR',
       searchOutboundFlight: true,
       searchReturnFlight: true,
-      travelClass: 'ECONOMY',
+      travelClass: 'economy',
       maxStops: 0,
       outboundTimeWindow: {
         earliestDepartureTime: 6,
@@ -178,8 +178,8 @@ describe('FlightSearchParameter class', () => {
 
     const instanceOfFlightSearchParameter1 = new FlightSearchParameter(userPreferences1, airbnbListingInfo1);
     const instanceOfFlightSearchParameter2 = new FlightSearchParameter(userPreferences2, airbnbListingInfo2);
-    const hash1 = instanceOfFlightSearchParameter1.hashify();
-    const hash2 = instanceOfFlightSearchParameter2.hashify();
+    const hash1 = instanceOfFlightSearchParameter1.hashifyInstance();
+    const hash2 = instanceOfFlightSearchParameter2.hashifyInstance();
 
     expect(hash1).toEqual(hash2);
   });

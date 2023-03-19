@@ -1,6 +1,7 @@
 import { FlightSearchBody, FlightSearchBodySchema, OriginDestination, Traveler, SearchCriteria, DateTimeRange} from '../types-schemas/FlightSearchBody'
 import { AirbnbListingInfo, GuestCounter } from '../types-schemas/ListingInfo'
 import { UserPreferences } from '../types-schemas/UserPreferences'
+import hash from 'object-hash';
 
 export class FlightSearchParameter {
   private _flightSearchBody: FlightSearchBody;
@@ -42,17 +43,15 @@ export class FlightSearchParameter {
   }
 
   // Returns a hash of the class so we can avoid duplicate API calls
-  public hashifyClass(): string {
-
-
-    return '';
+  public hashifyInstance(): string {
+    return hash(this._flightSearchBody);
   };
 
   private createSearchCriteria(userPreferences: UserPreferences): SearchCriteria {
-    const $ = structuredClone(FlightSearchParameter.defaultSearchCriteria);
+    const searchCriteria = structuredClone(FlightSearchParameter.defaultSearchCriteria);
 
-    $.flightFilters!.connectionRestrictions!.maxNumberOfConnections = userPreferences.maxStops;
-    $.flightFilters!.cabinRestrictions = [
+    searchCriteria.flightFilters!.connectionRestrictions!.maxNumberOfConnections = userPreferences.maxStops;
+    searchCriteria.flightFilters!.cabinRestrictions = [
       {
         cabin: userPreferences.travelClass,
         coverage: 'ALL_SEGMENTS',
@@ -60,7 +59,7 @@ export class FlightSearchParameter {
       }
     ]
 
-    return $;
+    return searchCriteria;
   }
 
   //Converting guestCounter from the listing, to travelers for the API

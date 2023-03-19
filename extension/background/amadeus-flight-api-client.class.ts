@@ -41,7 +41,7 @@ export class AmadeusFlightApiClient {
   public async getFlightOffersForListing(airbnbListingInfo: AirbnbListingInfo): Promise<FlightOffersResponse> {
     const flightSearchParameter = new FlightSearchParameter(this._userPreferences, airbnbListingInfo);
     const flightSearchBody = flightSearchParameter.getFlightSearchBody();
-    const flightSearchBodyHash = flightSearchParameter.hashifyClass();
+    const flightSearchBodyHash = flightSearchParameter.hashifyInstance();
 
     if (this._flightSearchParameterMap.has(flightSearchBodyHash)) {
       return this._flightSearchParameterMap.get(flightSearchBodyHash)!;
