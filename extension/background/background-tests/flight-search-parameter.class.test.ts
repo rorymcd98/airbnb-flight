@@ -1,5 +1,4 @@
-import { z } from 'zod'
-import { FlightSearchParameters } from '../flight-search-parameter.class';
+import { FlightSearchParameter } from '../flight-search-parameter.class';
 import { FlightSearchBody, FlightSearchBodySchema } from '../../types-schemas/FlightSearchBody'
 import { AirbnbListingInfo} from '../../types-schemas/ListingInfo'
 import { UserPreferences } from '../../types-schemas/UserPreferences'
@@ -12,14 +11,8 @@ describe('FlightSearchParameter class', () => {
         originLocation: 'LHR',
         searchOutboundFlight: true,
         searchReturnFlight: true,
-        travelClasses: {
-          ECONOMY: true,
-          PREMIUM_ECONOMY: false,
-          BUSINESS: false,
-          FIRST: false,
-        },
+        travelClass: 'ECONOMY',
         maxStops: 0,
-        maxPrice: 250,
         outboundTimeWindow: {
           earliestDepartureTime: 6,
           latestDepartureTime: 12,
@@ -39,16 +32,16 @@ describe('FlightSearchParameter class', () => {
         outboundDate: new Date('2023-03-16'),
         returnDate: new Date('2023-03-20'),
         guestCounter: {
-          adultsCount: 1,
+          adultsCount: 2,
           childrenCount: 1,
           infantsCount: 0
         },
         currencyCode: 'GBP'
       };
   
-      const instanceOfFlightSearchApi = new FlightSearchParameters(userPreferences, airbnbListingInfo);
+      const instanceOfFlightSearchParameter = new FlightSearchParameter(userPreferences, airbnbListingInfo);
   
-      const flightSearchBody: FlightSearchBody = instanceOfFlightSearchApi.getFlightSearchBody();
+      const flightSearchBody: FlightSearchBody = instanceOfFlightSearchParameter.getFlightSearchBody();
   
       // Expected output:
       const expectedFlightSearchBody: FlightSearchBody = {
@@ -88,24 +81,29 @@ describe('FlightSearchParameter class', () => {
           },
           {
             id: "2",
+            travelerType: "ADULT"
+          },
+          {
+            id: "3",
             travelerType: "CHILD"
           },
         ],
         sources: ["GDS"],
         searchCriteria: {
-          maxFlightOffers: 50,
+          maxFlightOffers: 7,
           flightFilters: {
             cabinRestrictions: [
               {
                 cabin: "ECONOMY",
-                coverage: "MOST_SEGMENTS",
-                originDestinationIds: ["1"],
+                coverage: "ALL_SEGMENTS",
+                originDestinationIds: ["1", "2"],
               },
             ],
-            carrierRestrictions: {
-              excludedCarrierCodes: [],
-            },
+            connectionRestrictions: {
+              maxNumberOfConnections: 0,
+            }
           },
+          oneFlightOfferPerDay: true,
         },
       };
   

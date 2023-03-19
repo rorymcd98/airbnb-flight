@@ -20,25 +20,14 @@ const TimeWindow = z.object({
     latestArrivalTime: Time.default(24)
   }).refine(checkTimesAreConsistent, {message: "Earliest departure/arrival time must be before latest departure/arrival time."})
 
-const TravelClass = z.object({
-    ECONOMY: z.boolean(),
-    PREMIUM_ECONOMY: z.boolean(),
-    BUSINESS: z.boolean(),
-    FIRST: z.boolean()
-  }).refine(obj => Object.values(obj).some(val => val === true), {
-    message: "At least one travel class must be selected."
-  });
-  
-
 export const userPreferencesSchema = z.object({
   originLocation: z.string().regex(/^[A-Z]{3}$/),
   searchOutboundFlight: z.boolean(),
   searchReturnFlight: z.boolean(),
-  travelClasses: TravelClass,
+  travelClass: z.union([z.literal("ECONOMY"), z.literal("PREMIUM_ECONOMY"), z.literal("BUSINESS"), z.literal("FIRST")]),
 //   airlineWhiteList: z.array(z.string()), //Currently removed as this is too granular (dev)
 //   airlineBlackList: z.array(z.string()),
   maxStops: z.number().optional().default(0),
-  maxPrice: z.number().optional(),
   outboundTimeWindow: TimeWindow,
   returnTimeWindow: TimeWindow
 })
@@ -48,11 +37,10 @@ export const userPreferencesSchema = z.object({
  * @param {string} originLocation IATA airport or city location code specified by the user (https://www.iata.org/en/publications/directories/code-search/)
  * @param {boolean} searchOutboundFlight is a boolean indicating whether to search for outbound flights
  * @param {boolean} searchReturnFlight is a boolean indicating whether to search for return flights
- * @param {string[]} travelClasses is an array of strings indicating the travel class
+ * @param {string[]} travelClass is an array of strings indicating the travel class
  * @param {string[]} airlineWhiteList is an array of strings indicating the airline whitelist
  * @param {string[]} airlineBlackList is an array of strings indicating the airline blacklist
  * @param {number} maxStops is the maximum number of stops
- * @param {number} maxPrice is the maximum price
  * @param {number} earliestDepartureTime is the earliest departure time
  * @param {number} latestDepartureTime is the latest departure time
  * @param {number} earliestArrivalTime is the earliest arrival time

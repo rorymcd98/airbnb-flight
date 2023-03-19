@@ -97,7 +97,16 @@ describe('FlightSearchBody Schema checker', () => {
     expect(()=> FlightSearchBodySchema.parse(badFlightSearchBody)).toThrowError(
       "The id property of the originDestination objects must be unique."
       );
-  })
+  });
+
+  test("should throw an error when the originLocation is lower case", () => {
+      const badFlightSearchBody = structuredClone(goodFlightSearchBody);
+      badFlightSearchBody.originDestinations[0]!.originLocationCode = "nyc";
+  
+      expect(()=> FlightSearchBodySchema.parse(badFlightSearchBody)).toThrowError(
+        /invalid_string/
+        );
+  });
 
 })
 
@@ -107,14 +116,8 @@ describe('userPreferencesSchema', () => {
       originLocation: 'LHR',
       searchOutboundFlight: true,
       searchReturnFlight: true,
-      travelClasses: {
-        ECONOMY: true,
-        PREMIUM_ECONOMY: false,
-        BUSINESS: true,
-        FIRST: false,
-      },
+      travelClass: "ECONOMY",
       maxStops: 1,
-      maxPrice: 500,
       outboundTimeWindow: {
         earliestDepartureTime: 6,
         latestDepartureTime: 12,
@@ -136,14 +139,8 @@ describe('userPreferencesSchema', () => {
       originLocation: 'LHR',
       searchOutboundFlight: true,
       searchReturnFlight: true,
-      travelClasses: {
-        ECONOMY: true,
-        PREMIUM_ECONOMY: false,
-        BUSINESS: true,
-        FIRST: false,
-      },
+      travelClass: "ECONOMY",
       maxStops: 1,
-      maxPrice: 500,
       outboundTimeWindow: {
 
       } as any,
@@ -179,14 +176,8 @@ describe('userPreferencesSchema', () => {
       originLocation: 'LHR',
       searchOutboundFlight: true,
       searchReturnFlight: true,
-      travelClasses: {
-        ECONOMY: true,
-        PREMIUM_ECONOMY: false,
-        BUSINESS: true,
-        FIRST: false,
-      },
+      travelClass: "ECONOMY",
       maxStops: 1,
-      maxPrice: 500,
       outboundTimeWindow: {
         earliestDepartureTime: 16,
         latestDepartureTime: 12,
@@ -207,17 +198,11 @@ describe('userPreferencesSchema', () => {
 
   test('should not validate an invalid user preferences object with invalid originLocation', () => {
     const userPreferences: UserPreferences =  {
-      originLocation: 'lhr',
+      originLocation: 'lhr', // lowercase is invalid
       searchOutboundFlight: true,
       searchReturnFlight: true,
-      travelClasses: {
-        ECONOMY: true,
-        PREMIUM_ECONOMY: false,
-        BUSINESS: true,
-        FIRST: false,
-      },
+      travelClass: "ECONOMY",
       maxStops: 1,
-      maxPrice: 500,
       outboundTimeWindow: {
         earliestDepartureTime: 6,
         latestDepartureTime: 12,
@@ -236,19 +221,13 @@ describe('userPreferencesSchema', () => {
     );
   });
 
-  test('should through an error if there is no selected travelClass', () => {
+  test('should through an error if the travelClass is not one of ECONOMY etc.', () => {
     const userPreferences: UserPreferences =  {
       originLocation: 'LHR',
       searchOutboundFlight: true,
       searchReturnFlight: true,
-      travelClasses: {
-        ECONOMY: false,
-        PREMIUM_ECONOMY: false,
-        BUSINESS: false,
-        FIRST: false,
-      },
+      travelClass: "SUPER_CLASS" as any, //this is invalid
       maxStops: 1,
-      maxPrice: 500,
       outboundTimeWindow: {
         earliestDepartureTime: 6,
         latestDepartureTime: 12,
@@ -263,7 +242,7 @@ describe('userPreferencesSchema', () => {
       }
     };
     expect(() => userPreferencesSchema.parse(userPreferences)).toThrowError(
-      "At least one travel class must be selected."
+      /invalid_union/
     );
   });
 

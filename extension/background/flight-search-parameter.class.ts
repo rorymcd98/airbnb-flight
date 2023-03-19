@@ -1,13 +1,12 @@
-import { z } from 'zod'
-import { loadObjectFromFile } from './object-storage'
 import { FlightSearchBody, FlightSearchBodySchema, OriginDestination, Traveler, SearchCriteria, DateTimeRange} from '../types-schemas/FlightSearchBody'
 import { AirbnbListingInfo, GuestCounter } from '../types-schemas/ListingInfo'
 import { UserPreferences } from '../types-schemas/UserPreferences'
 
-export class FlightSearchParameters {
+export class FlightSearchParameter {
   private _flightSearchBody: FlightSearchBody;
   private static defaultSearchCriteria: SearchCriteria = {
     oneFlightOfferPerDay: true,
+    maxFlightOffers: 7,
     flightFilters: {
       cabinRestrictions: [],
       connectionRestrictions: {}
@@ -33,21 +32,33 @@ export class FlightSearchParameters {
       sources,
       searchCriteria,
     };
+
+    this._flightSearchBody = FlightSearchBodySchema.parse(this._flightSearchBody);
   }
 
   public getFlightSearchBody(): FlightSearchBody{
+
     return this._flightSearchBody;
   }
 
   // Returns a hash of the class so we can avoid duplicate API calls
   public hashifyClass(): string {
+
+
     return '';
   };
 
   private createSearchCriteria(userPreferences: UserPreferences): SearchCriteria {
-    const $ = structuredClone(FlightSearchParameters.defaultSearchCriteria);
-    $.maxPrice = userPreferences.maxPrice;
+    const $ = structuredClone(FlightSearchParameter.defaultSearchCriteria);
+
     $.flightFilters!.connectionRestrictions!.maxNumberOfConnections = userPreferences.maxStops;
+    $.flightFilters!.cabinRestrictions = [
+      {
+        cabin: userPreferences.travelClass,
+        coverage: 'ALL_SEGMENTS',
+        originDestinationIds: ['1', '2']
+      }
+    ]
 
     return $;
   }
