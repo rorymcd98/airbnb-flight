@@ -10,6 +10,7 @@ export default defineConfig({
   },
   root: 'extension-frontend',
   build: {
+    emptyOutDir: true,
     target: 'chrome88',
     assetsDir: 'extension-frontend/src/assets',
     manifest: false,

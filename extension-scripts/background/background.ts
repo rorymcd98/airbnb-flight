@@ -1,9 +1,9 @@
 //---Popup script communication channel---
 // background-script.js
 
-let portFromCS;
+let portFromCS: chrome.runtime.Port;
 
-function connected(p) {
+function connected(p: chrome.runtime.Port) {
   portFromCS = p;
   portFromCS.postMessage({greeting: "hi there content script!"});
   portFromCS.onMessage.addListener((m) => {
@@ -12,11 +12,7 @@ function connected(p) {
   });
 }
 
-browser.runtime.onConnect.addListener(connected);
-
-browser.browserAction.onClicked.addListener(() => {
-  portFromCS.postMessage({greeting: "they clicked the button!"});
-});
+chrome.runtime.onConnect.addListener(connected);
 
 //Set up a communication channel with the popup script (for preferences)
 

@@ -16,7 +16,7 @@
     "noEmit": false,
     "noEmitOnError": false,
     "jsx": "react-jsx",
-    "outDir": "./dist/js",
+    "outDir": "./dist",
     "rootDir": "./",
     "declaration": true,
     "declarationDir": "./extension-scripts/dist/@types"

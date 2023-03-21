@@ -7,24 +7,19 @@
   },
   "permissions": [],
   "background": {
-    "service_worker": "./js/background.js"
-  },
-  "icons": {
-    "16": "icon.png",
-    "32": "icon.png",
-    "48": "icon.png",
-    "128": "icon.png"
-  },
-  "browser_action": {
-    "default_icon": "icon.png",
-    "default_title": "Airbnb flight",
-    "default_popup": "popup.html"
+    "service_worker": "./extension-scripts/background/background.js"
   },
   "content_scripts": [
     {
-      "matches": ["https://www.airbnb.co*/*"],
-      "js": ["./js/content.js"],
+      "matches": ["https://www.airbnb.co.uk/"],
+      "js": ["./extension-scripts/content/content.js"],
       "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["./extension-scripts/content/*.js"],
+      "matches": ["<all_urls>"]
     }
   ]
 }
