@@ -12,23 +12,23 @@
     "module": "ESNext",
     "moduleResolution": "Node",
     "resolveJsonModule": true,
-    "isolatedModules": true,
+    "isolatedModules": false,
     "noEmit": false,
     "noEmitOnError": false,
     "jsx": "react-jsx",
-    "outDir": "./extension/dist",
+    "outDir": "./dist/js",
     "rootDir": "./",
     "declaration": true,
-    "declarationDir": "./extension/dist/@types"
+    "declarationDir": "./extension-scripts/dist/@types"
   },
   "include": [
-    "extension/**/*.**",
+    "extension-scripts/**/*.**",
     "./vite.config.ts",
-    "./frontend/src/vite-env.d.ts"
+    "./extension-frontend/src/vite-env.d.ts"
   ],      
   "exclude": ["node_modules",
-    "./extension/dist",
-    "./extension/@types"
+    "./extension-scripts/dist",
+    "./extension-scripts/@types"
   ],
   "types": ["node"]
 }

@@ -116,7 +116,7 @@ describe('FlightSearchParameter class', () => {
       originLocation: 'LHR',
       searchOutboundFlight: true,
       searchReturnFlight: true,
-      travelClass: 'economy',
+      travelClass: 'ECONOMY',
       maxStops: 0,
       outboundTimeWindow: {
         earliestDepartureTime: 6,
@@ -182,6 +182,79 @@ describe('FlightSearchParameter class', () => {
     const hash2 = instanceOfFlightSearchParameter2.hashifyInstance();
 
     expect(hash1).toEqual(hash2);
+  });
+
+  test('the .hashifyInstance() method should not hash 2 minorly different instances to the same string.', () => {
+    const userPreferences1: UserPreferences =  {
+      originLocation: 'LHR',
+      searchOutboundFlight: true,
+      searchReturnFlight: true,
+      travelClass: 'BUSINESS', // <--- This is the only difference between the two instances.
+      maxStops: 0,
+      outboundTimeWindow: {
+        earliestDepartureTime: 6,
+        latestDepartureTime: 12,
+        earliestArrivalTime: 12,
+        latestArrivalTime: 18
+      },
+      returnTimeWindow: {
+        earliestDepartureTime: 0,
+        latestDepartureTime: 24,
+        earliestArrivalTime: 0,
+        latestArrivalTime: 24
+      }
+    };
+
+    const airbnbListingInfo1: AirbnbListingInfo  ={
+      destinationLocation: 'PRG',
+      outboundDate: new Date('2023-03-16'),
+      returnDate: new Date('2023-03-20'),
+      guestCounter: {
+        adultsCount: 2,
+        childrenCount: 1,
+        infantsCount: 0
+      },
+      currencyCode: 'GBP'
+    };
+
+    const userPreferences2: UserPreferences =  {
+      originLocation: 'LHR',
+      searchOutboundFlight: true,
+      searchReturnFlight: true,
+      travelClass: 'ECONOMY',
+      maxStops: 0,
+      outboundTimeWindow: {
+        earliestDepartureTime: 6,
+        latestDepartureTime: 12,
+        earliestArrivalTime: 12,
+        latestArrivalTime: 18
+      },
+      returnTimeWindow: {
+        earliestDepartureTime: 0,
+        latestDepartureTime: 24,
+        earliestArrivalTime: 0,
+        latestArrivalTime: 24
+      }
+    };
+
+    const airbnbListingInfo2: AirbnbListingInfo  ={
+      destinationLocation: 'PRG',
+      outboundDate: new Date('2023-03-16'),
+      returnDate: new Date('2023-03-20'),
+      guestCounter: {
+        adultsCount: 2,
+        childrenCount: 1,
+        infantsCount: 0
+      },
+      currencyCode: 'GBP'
+    };
+
+    const instanceOfFlightSearchParameter1 = new FlightSearchParameter(userPreferences1, airbnbListingInfo1);
+    const instanceOfFlightSearchParameter2 = new FlightSearchParameter(userPreferences2, airbnbListingInfo2);
+    const hash1 = instanceOfFlightSearchParameter1.hashifyInstance();
+    const hash2 = instanceOfFlightSearchParameter2.hashifyInstance();
+
+    expect(hash1).not.toEqual(hash2);
   });
 });
 

@@ -8,15 +8,15 @@ export default defineConfig({
   worker: {
     plugins: [react()]
   },
-  root: 'frontend',
+  root: 'extension-frontend',
   build: {
     target: 'chrome88',
-    assetsDir: 'frontend/src/assets',
+    assetsDir: 'extension-frontend/src/assets',
     manifest: false,
     rollupOptions: {
       input: {
-        popup: resolve(__dirname, 'frontend/src/popup/popup.tsx'),
-        options: resolve(__dirname, 'frontend/src/options/options.tsx')
+        popup: resolve(__dirname, 'extension-frontend/src/popup/popup.tsx'),
+        options: resolve(__dirname, 'extension-frontend/src/options/options.tsx')
       },
       output: {
         entryFileNames: '[name].js',
