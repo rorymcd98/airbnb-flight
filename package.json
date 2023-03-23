@@ -3,6 +3,7 @@
     "@babel/core": "^7.21.0",
     "@babel/preset-env": "^7.20.2",
     "@babel/preset-typescript": "^7.21.0",
+    "@crxjs/vite-plugin": "^2.0.0-beta.15",
     "@jest/globals": "^29.4.3",
     "@types/chrome": "^0.0.224",
     "@types/node": "^18.15.3",
@@ -41,7 +42,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && tsc",
+    "build": "vite build",
     "build-extension": "npm run build && copy /src/manifest.json /dist/",
     "preview": "vite preview",
     "tsc": "tsc --watch",

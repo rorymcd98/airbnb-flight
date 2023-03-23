@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Airbnb flight",
+  "version": "0.1.1", 
+  "action": {
+    "default_popup": "./extension-frontend/public/popup.html"
+  },
+  "permissions": [],
+  "background": {
+    "service_worker": "./extension-scripts/background/background.ts"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.airbnb.co.uk/"],
+      "js": ["./extension-scripts/content/content.tsx"],
+      "run_at": "document_end"
+    }
+  ]
+}
