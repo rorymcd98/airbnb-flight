@@ -21,26 +21,10 @@ export default defineConfig({
     target: 'chrome88',
     assetsDir: 'extension-frontend/src/assets',
     manifest: false,
+    sourcemap: true
    
   },
   server: {
     open: 'public/popup.html'
   }
 })
-
-
-const old = {
-  rollupOptions: {
-    input: {
-      popup: resolve(__dirname, 'extension-frontend/src/popup/popup.tsx'),
-      options: resolve(__dirname, 'extension-frontend/src/options/options.tsx')
-    },
-    output: {
-      entryFileNames: '[name].js',
-      chunkFileNames: '[name].js',
-      assetFileNames: '[name][extname]',
-      format: 'es',
-      dir: resolve(__dirname, 'dist')
-    }
-  }
-}
