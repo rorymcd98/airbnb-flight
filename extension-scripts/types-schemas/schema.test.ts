@@ -1,10 +1,27 @@
 
-import { z } from 'zod'
 import { FlightSearchBody, FlightSearchBodySchema } from './FlightSearchBody'
 import { AirbnbListingInfo, airbnbListingInfoSchema} from './ListingInfo'
 import { UserPreferences, userPreferencesSchema } from './UserPreferences'
+import { AirportCodeSchema } from './AirportCode'
 import {describe, test, expect} from '@jest/globals';
 
+describe('AirportCode Schema checker', () => {
+  const goodAirportCodes = ["LHR","MAD","NYC","PRG","SFO","SIN","SYD","TPE","YYZ"];
+  const badAirportCodes = ["LHR1","MAD1","NYC1","PRG1","PRAGUE","SIN1","password1","TPE1","YYZ1"];
+
+  test('should pass the goodAirportCodes', () => {
+    goodAirportCodes.forEach((airportCode) => {
+      expect(AirportCodeSchema.safeParse(airportCode).success).toBe(true);
+    })
+  });
+
+  test('should throw an error when the badAirportCodes are used', () => {
+    badAirportCodes.forEach((airportCode) => {
+      expect(AirportCodeSchema.safeParse(airportCode).success).toBe(false);
+    })
+  });
+
+})
 
 describe('FlightSearchBody Schema checker', () => {
   const goodFlightSearchBody: FlightSearchBody = {

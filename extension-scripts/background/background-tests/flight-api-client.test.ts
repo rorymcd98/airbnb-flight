@@ -1,14 +1,14 @@
 import {describe, test, expect} from '@jest/globals';
 import { FlightSearchBody } from '../../types-schemas/FlightSearchBody';
-import { FlightSearchParameter } from './../flight-search-parameter.class';
-import { AmadeusFlightApiClient } from '../amadeus-flight-api-client.class';
+import FlightSearchParameter from './../flight-search-parameter.class';
+import FlightApiClient from '../flight-api-client.class';
 import { UserPreferences } from './../../types-schemas/UserPreferences';
 import { airbnbListingInfoSchema } from './../../types-schemas/ListingInfo';
 
-describe('AmadeusFlightApiClient class', () => {
+describe('FlightApiClient class', () => {
   test('Should create a single instance of the class when .getInstance is called, but should throw an error when called again', async () => {
     const initialUserPreferences: UserPreferences =  {
-      originLocation: 'LHR',
+      originLocation: 'London',
       searchOutboundFlight: true,
       searchReturnFlight: true,
       travelClass: "ECONOMY",
@@ -27,13 +27,13 @@ describe('AmadeusFlightApiClient class', () => {
       }
     };
 
-    const amadeusFlightApiClientInstance1 = AmadeusFlightApiClient.getInstance(initialUserPreferences);
+    const FlightApiClientInstance1 = FlightApiClient.getInstance(initialUserPreferences);
 
-    expect(amadeusFlightApiClientInstance1).toBeInstanceOf(AmadeusFlightApiClient);
+    expect(FlightApiClientInstance1).toBeInstanceOf(FlightApiClient);
 
     expect(() => {
-      const amadeusFlightApiClientInstance2 = AmadeusFlightApiClient.getInstance(initialUserPreferences);
-    }).toThrowError('AmadeusFlightApiClient is a singleton class, cannot create further instances.');
+      const FlightApiClientInstance2 = FlightApiClient.getInstance(initialUserPreferences);
+    }).toThrowError('FlightApiClient is a singleton class, cannot create further instances.');
     
   });
 });

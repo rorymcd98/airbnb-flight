@@ -1,127 +1,169 @@
 import React from "react";
 import { createRoot } from 'react-dom/client';
-
-// console.log('1h23i123')
-// document.addEventListener("DOMContentLoaded", (event) => {
-// //---Initiate content-background script communication channel---
-// // content-script.js
-
-
-let myPort = chrome.runtime.connect({name:"port-from-cs"});
-myPort.postMessage({greeting: "hello from content script"});
-
-myPort.onMessage.addListener((m) => {
-  console.log("In content script, received message from background script: ");
-  console.log(m.greeting);
-});
-
-
-//---Add 'request-flights-button' buttons to the page---
+import { date } from "zod";
+import { AirbnbListingInfo, airbnbListingInfoSchema, GuestCounter} from "../types-schemas/ListingInfo";
 
 
 
-// const reactComponent = React.createElement('div');
+//---Add 'FlightPriceRequestButton' buttons to the page---
 
-function ReactComponent({idNumber}) {
+//React component for the FlightPriceRequestButton
+type FlightPriceRequestProps = {
+  idNumber: string;
+  flightPriceRequestOnClick: (e: Event) => void;
+};
+function FlightPriceRequest({idNumber, flightPriceRequestOnClick }: FlightPriceRequestProps) {
   return (
-    <div id={"MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM" + idNumber.toString()}>vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv</div>
+    <span 
+      key={idNumber}
+      className = {'FlightPriceRequestContainer'}
+    >
+      <button
+        className="FlightPriceRequestButton"
+        onClick={flightPriceRequestOnClick}
+        style={{position: 'relative', zIndex: 2}}
+      >Flights</button>
+    </span>
   )
 }
 
 //---Grab all the listings on a page and iterate to generate listing information for each---
+function findAllListingElements(): HTMLCollectionOf<Element> {
+  const listingClassName = 'c4mnd7m';
+  return document.getElementsByClassName(listingClassName);
+}
 
 //---Render the 'request-flights-button' button on each listing div---
-function renderRequestFlightsButton(listingDivs) {
-  let c = 0;
-  listingDivs.forEach((listingDiv) => {
-    const test = document.createElement('div');
-    test.id = 'test' + c;
-    console.log(c)
-    listingDiv.appendChild(test);
-    createRoot(listingDiv).render(<ReactComponent idNumber={c}/>);
-    console.log(c);
-    c++;
-  });
-}
+function renderFlightPriceRequestComponent(listingElements: HTMLCollectionOf<Element>) {
+  for (let i = 0; i < listingElements.length; i++) {
+    const curListing = listingElements[i] as HTMLDivElement;
 
+    if (checkAlreadyHasComponent(curListing)) {continue}
 
+    const extensionListingId = getListingId(curListing);
+    const priceContainer = getPriceContainer(curListing);
 
+    if (!priceContainer || !extensionListingId) {continue}
 
+    const attachmentPoint = document.createElement('span');
+    attachmentPoint.id = 'request-flights-' + extensionListingId;
+    priceContainer.appendChild(attachmentPoint);
 
+    const flightPriceOnClick = generateFlightPriceOnClick(extensionListingId, curListing);
 
-const configForListings = { attributes: true, childList: true, subtree: false };
+    createRoot(attachmentPoint).render(<FlightPriceRequest idNumber={extensionListingId} flightPriceRequestOnClick={flightPriceOnClick}/>);
 
-const callbackForListings = function(mutationsList) {
-  console.log('Here: ')
-  console.log(mutationsList)
-  for(let mutation of mutationsList) {
-     console.log('Here2: ');
-     console.log(mutation)
   }
-};
 
+  
+function generateFlightPriceOnClick (idNumber: string, listingDiv: HTMLElement): (e: Event) => void {
+  return async function(e) {
+    e.stopPropagation();
 
-// Options for the observer (which mutations to observe)
-const configForContainer = { attributes: true, childList: true, subtree: true };
+    //Extract as much listing info as possible from the the href
+    const partialListingInfo = extractBookingDetails(listingDiv);
 
-var observerFindListings = new MutationObserver(callbackForListings);
+    const currencyCode = getCurrencyCodeFromPage();
 
-function initObserveListings(containerNode) {
-  console.log('initObserverListings called')
+    //Extract the destinationLocation (address) from the listing div
+    const destinationLocationSelector = '#title_' + idNumber;
+    const destinationLocation = listingDiv.querySelector(destinationLocationSelector)?.textContent?.trim() as string;
 
-
-  setTimeout(()=>(console.log(containerNode)), 3000);
-
-  observerFindListings.observe(containerNode, configForListings);
-}
-
-// Callback function to execute when mutations are observed
-const callbackFindListingsContainer = function(mutationsList) {
-    for(let mutation of mutationsList) {
-        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-          const x = Array.isArray(mutation.addedNodes) ? mutation.addedNodes : [mutation.addedNodes]; 
-            x.forEach(newNode => {
-                if (newNode.classList && newNode.classList.contains('gh7uyir')) {
-                    // Execute your desired action when the node is found
-                    console.log('Node with class "gh7uyir" has been added:', newNode);
-                    
-                    //renderRequestFlightsButton(newNode.children);
-                    observerFindListingsContainer.disconnect();
-                    initObserveListings(newNode);
-
-                }
-            });
-        }
+    const listingInfo: AirbnbListingInfo = {
+      ...partialListingInfo,
+      currencyCode,
+      destinationLocation
     }
-};
 
-// Create an observer instance linked to the callback function
-const observerFindListingsContainer = new MutationObserver(callbackFindListingsContainer);
+    type FlightPriceRequest = {
+      type: 'flight-price-request';
+      id: string;
+      listingInfo: AirbnbListingInfo;
+    }
 
+    const destinationLocationMessage: FlightPriceRequest = {
+      type: 'flight-price-request',
+      id: idNumber,
+      listingInfo
+    }
 
+    chrome.runtime.sendMessage(destinationLocationMessage, function(response) {
+      console.log(response);
+      return response.destinationLocationCode;
+    });
 
-function findContainer (){
-  const container = document.querySelector('.gh7uyir');
-  if (container) {
-    console.log("Didn't need to observe")
+    
+  };
 
-    initObserveListings(container);
-  } else {
-    console.log("Need to observe")
-    // Start observing the target node for configured mutations
-    console.log(document)
-    observerFindListingsContainer.observe(document, configForContainer);
+  //Extract booking details from the URL of the listingDiv
+  function extractBookingDetails(listingDiv: HTMLElement): {guestCounter: GuestCounter, outboundDate: Date, returnDate: Date} {
+    const selectorForListingUrl = 'div.c1l1h97y.dir.dir-ltr > div > div > div > div.cy5jw6o.dir.dir-ltr > a'
+
+    const href = listingDiv.querySelector(selectorForListingUrl)?.getAttribute('href');
+    //E.g. href="/rooms/42850678?adults=1&amp;category_tag=Tag%3A8225&amp;children=1&amp;enable_m3_private_room=false&amp;infants=1&amp;pets=0&amp;search_mode=flex_destinations_search&amp;check_in=2023-12-19&amp;check_out=2023-12-23&amp;previous_page_section_name=1000&amp;federated_search_id=0c937c85-f380-4c0e-a3b3-3441fb5c745e"
+
+    if (href == null) { throw new Error('Could not find listing URL');}
+
+    const urlParams = new URLSearchParams(href.substring(href.indexOf('?')));
+
+    const guestCounter: GuestCounter = {
+      adultsCount: Number(urlParams.get('adults')),
+      childrenCount: Number(urlParams.get('children')),
+      infantsCount: Number(urlParams.get('infants')),
+    }
+
+    const checkIn = urlParams.get('check_in');
+    const checkOut = urlParams.get('check_out');
+
+    if (checkOut == null || checkIn == null) { throw new Error('Could not find check in or check out dates');}
+
+    return {
+      guestCounter,
+      outboundDate: new Date(checkIn),
+      returnDate: new Date(checkOut)
+    };
   }
 
-  console.log('something should have happened')
+  function getCurrencyCodeFromPage(): string {
+    const currencySelector = '#site-content > div.c1yo0219.dir.dir-ltr > footer > div > div._1wsqynx > section > div._1udzt2s > div._18dgbyf > div > span:nth-child(2) > button > span._144l3kj';
+
+    const currencyCode = document.querySelector(currencySelector)?.textContent?.trim() as string;
+    return currencyCode ?? 'USD';
+  }
+};
+
+  function checkAlreadyHasComponent(listingElement : HTMLDivElement): boolean {
+    const existingComponent = listingElement.getElementsByClassName('FlightPriceRequestContainer')[0] as HTMLDivElement;
+    return !!existingComponent;
+  }
+
+  function getListingId(listingElement : HTMLDivElement): string | undefined {
+    const listingUrlMetaTag = listingElement.querySelector('meta[itemprop="url"]') as HTMLMetaElement;
+    if (!listingUrlMetaTag) { return; }
+
+    const listingUrl = listingUrlMetaTag.getAttribute('content');
+    if (!listingUrl) { return; }
+
+    const listingId = listingUrl.split('/')[2].slice(0,8);
+    return listingId;
+  }
+
+  function getPriceContainer(listingElement : HTMLDivElement): HTMLDivElement | undefined {
+    const listingPriceClassName = '_i5duul';
+    const priceContainer = listingElement.getElementsByClassName(listingPriceClassName)[0] as HTMLDivElement;
+    return priceContainer;
+  }
+};
+
+function initRenderingLoop() {
+  const listingDivs = findAllListingElements();
+  if (listingDivs.length > 0) {
+    renderFlightPriceRequestComponent(listingDivs);
+  }
+  setTimeout(initRenderingLoop, 1000);
 }
 
-setTimeout(findContainer, 3000);
-// findContainer();
-
-
-
-
+initRenderingLoop();
 
 //---Send listing information on 'request-flights-button' button click---
 
@@ -130,5 +172,3 @@ setTimeout(findContainer, 3000);
 
 
 //---Display flight information on the page---
-
-//});

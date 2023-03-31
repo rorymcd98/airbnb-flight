@@ -5,7 +5,6 @@
   "action": {
     "default_popup": "./extension-frontend/public/popup.html"
   },
-  "permissions": [],
   "background": {
     "service_worker": "./extension-scripts/background/background.ts"
   },

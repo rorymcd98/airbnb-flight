@@ -1,9 +1,11 @@
 import { FlightSearchBody, FlightSearchBodySchema, OriginDestination, Traveler, SearchCriteria, DateTimeRange} from '../types-schemas/FlightSearchBody'
 import { AirbnbListingInfo, GuestCounter } from '../types-schemas/ListingInfo'
 import { UserPreferences } from '../types-schemas/UserPreferences'
+import { AirportCode } from '../types-schemas/AirportCode'
+
 import hash from 'object-hash';
 
-export class FlightSearchParameter {
+export default class FlightSearchParameter {
   private _flightSearchBody: FlightSearchBody;
   private static defaultSearchCriteria: SearchCriteria = {
     oneFlightOfferPerDay: true,
@@ -16,12 +18,14 @@ export class FlightSearchParameter {
 
   constructor(
     userPreferences: UserPreferences,
-    airbnbListingInfo: AirbnbListingInfo
-    ){
+    airbnbListingInfo: AirbnbListingInfo,
+    originLocationAirportCode: AirportCode,
+    destinationLocationAirportCode: AirportCode
+    ) {
     const guestCounter = airbnbListingInfo.guestCounter;
 
     const currencyCode = airbnbListingInfo.currencyCode;
-    const originDestinations = this.assembleOriginDestinations(userPreferences, airbnbListingInfo);
+    const originDestinations = this.assembleOriginDestinations(userPreferences, airbnbListingInfo, originLocationAirportCode, destinationLocationAirportCode);
     const travelers = this.convertGuestCounterToTravelers(guestCounter);
     const sources = ['GDS'] as ['GDS']; //Currently only one 'GDS' is accepted
     const searchCriteria = this.createSearchCriteria(userPreferences);
@@ -94,7 +98,7 @@ export class FlightSearchParameter {
     return travelersRes;
   }
     
-  private assembleOriginDestinations(userPreferences: UserPreferences, airbnbListingInfo: AirbnbListingInfo): OriginDestination[] {
+  private assembleOriginDestinations(userPreferences: UserPreferences, airbnbListingInfo: AirbnbListingInfo, originLocationAirportCode: AirportCode, destinationLocationAirportCode: AirportCode): OriginDestination[] {
     //alias for the object we are building
     const out = {} as OriginDestination;
     const ret = {} as OriginDestination;
@@ -103,9 +107,9 @@ export class FlightSearchParameter {
     //Outbound flight
     if(userPreferences.searchOutboundFlight) {
       out.id = '1'; 
-      out.originLocationCode = userPreferences.originLocation;
+      out.originLocationCode = originLocationAirportCode;
       out.originRadius = 0; //(dev) Eventually give the user control
-      out.destinationLocationCode = airbnbListingInfo.destinationLocation;
+      out.destinationLocationCode = destinationLocationAirportCode;
       out.destinationRadius = 0; //(dev) as above
       out.departureDateTimeRange = this.createDepartureDateTimeRange(userPreferences, airbnbListingInfo, true);
 

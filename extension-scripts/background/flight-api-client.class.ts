@@ -2,20 +2,22 @@ import axios from 'axios';
 import dotenv from 'dotenv';
 dotenv.config();
 import { FlightSearchBody } from '../types-schemas/FlightSearchBody';
-import { FlightSearchParameter } from './flight-search-parameter.class';
+import FlightSearchParameter from './flight-search-parameter.class';
 import { AirbnbListingInfo } from '../types-schemas/ListingInfo';
 import { UserPreferences } from '../types-schemas/UserPreferences';
+import AirportCodeApiClient from './airportCode-api-client.class';
 
 type FlightOffersResponse = any; // (dev) need to define a FlightSearchResponse class
 
-export class AmadeusFlightApiClient {
-  private static _instance: AmadeusFlightApiClient;
+export default class FlightApiClient {
+  private static _instance: FlightApiClient;
   private _clientId?: string;
   private _clientSecret?: string;
   private _accessToken?: string;
   private _accessTokenExpiryTime: number = 0;
   private _flightSearchParameterMap: Map<string, FlightOffersResponse> = new Map();
   private _userPreferences: UserPreferences = {} as UserPreferences;
+  private static AirportCodeApiClient: AirportCodeApiClient;
   
   private constructor(initialUserPreferences: UserPreferences) {
     if (process.env.DEV_MODE === 'true') {
@@ -26,20 +28,27 @@ export class AmadeusFlightApiClient {
     this._userPreferences = initialUserPreferences;
   }
 
-  public static getInstance(initialUserPreferences: UserPreferences): AmadeusFlightApiClient {
-    if (!AmadeusFlightApiClient._instance) {
-      AmadeusFlightApiClient._instance = new AmadeusFlightApiClient(initialUserPreferences);
+  public static getInstance(initialUserPreferences: UserPreferences): FlightApiClient {
+    if (!FlightApiClient._instance) {
+      FlightApiClient._instance = new FlightApiClient(initialUserPreferences);
+      FlightApiClient.AirportCodeApiClient = AirportCodeApiClient.getInstance();
     } else {
-      throw new Error('AmadeusFlightApiClient is a singleton class, cannot create further instances.');
+      throw new Error('FlightApiClient is a singleton class, cannot create further instances.');
     }
 
-    return AmadeusFlightApiClient._instance;
+    return FlightApiClient._instance;
   }
 
   //Primary public method for this class - retrieve a flight offer for a given listing
   //If we've already searched for this listing, return the memoised result
   public async getFlightOffersForListing(airbnbListingInfo: AirbnbListingInfo): Promise<FlightOffersResponse> {
-    const flightSearchParameter = new FlightSearchParameter(this._userPreferences, airbnbListingInfo);
+    const airportCodeAccessToken = await this.getAccessToken();
+    
+    const homeAirportCode = await FlightApiClient.AirportCodeApiClient.checkThenFetchAirportCode(this._userPreferences.originLocation, airportCodeAccessToken);
+    const destinationAirportCode = await FlightApiClient.AirportCodeApiClient.checkThenFetchAirportCode(airbnbListingInfo.destinationLocation, airportCodeAccessToken);
+    
+    
+    const flightSearchParameter = new FlightSearchParameter(this._userPreferences, airbnbListingInfo, homeAirportCode, destinationAirportCode);
     const flightSearchBody = flightSearchParameter.getFlightSearchBody();
     const flightSearchBodyHash = flightSearchParameter.hashifyInstance();
 
@@ -110,6 +119,11 @@ export class AmadeusFlightApiClient {
   }
 
 }
+
+
+
+
+
 
 // Example amadeus flight offers body
 // const flightSearchBody: FlightSearchBody = {

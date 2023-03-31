@@ -16,15 +16,18 @@
     "noEmit": false,
     "noEmitOnError": false,
     "jsx": "react-jsx",
-    "outDir": "./dist",
+    "outDir": "./tests/",
     "rootDir": "./",
     "declaration": true,
     "declarationDir": "./extension-scripts/dist/@types"
   },
   "include": [
-    "extension-scripts/**/*.**",
-    "./vite.config.ts",
-    "./extension-frontend/src/vite-env.d.ts"
+    // "extension-scripts/**/**.test.**",
+    // "./vite.config.ts",
+    // "./extension-frontend/src/vite-env.d.ts"
+    
+    //just test files
+    "**/*.test.ts",
   ],      
   "exclude": ["node_modules",
     "./extension-scripts/dist",

@@ -4,7 +4,6 @@ import { z } from "zod"
  * Interfaces for Airbnb related data obtained from the DOM
  * shared by background and content scripts 
  *  */ 
-
 const guestCounterSchema = z.object({
   adultsCount: z.number().min(1),
   childrenCount: z.number().min(0),
@@ -31,7 +30,7 @@ export const airbnbListingInfoSchema = z.object({
 
 /**
  * @typedef airbnbListingInfo defines the destination location, outbound date, return date, guest counter and currency code
- * @param {string} destinationLocation is the destination location code
+ * @param {string} destinationLocation is the destination location name
  * @param {Date} outboundDate is the outbound date
  * @param {Date} returnDate is the return date 
  * @param {GuestCounter} guestCounter inferred from the Airbnb page
