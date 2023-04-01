@@ -1,6 +1,5 @@
 import React from "react";
 import { createRoot } from 'react-dom/client';
-import { date } from "zod";
 import { AirbnbListingInfo, airbnbListingInfoSchema, GuestCounter} from "../types-schemas/ListingInfo";
 
 
@@ -75,6 +74,14 @@ function generateFlightPriceOnClick (idNumber: string, listingDiv: HTMLElement):
       destinationLocation
     }
 
+    const parsedListingInfo = airbnbListingInfoSchema.safeParse(listingInfo);
+
+    if (!parsedListingInfo.success) {
+      console.error(listingInfo);
+      throw new Error('Could not validate listing info.');
+    }
+
+
     type FlightPriceRequest = {
       type: 'flight-price-request';
       id: string;
@@ -84,12 +91,17 @@ function generateFlightPriceOnClick (idNumber: string, listingDiv: HTMLElement):
     const destinationLocationMessage: FlightPriceRequest = {
       type: 'flight-price-request',
       id: idNumber,
-      listingInfo
+      listingInfo: parsedListingInfo.data
     }
 
-    chrome.runtime.sendMessage(destinationLocationMessage, function(response) {
-      console.log(response);
-      return response.destinationLocationCode;
+    chrome.runtime.sendMessage(destinationLocationMessage, async function(response) {
+      const res = await response;
+      if (res.type === 'flight-price-response') {
+          console.log(res)
+      } else {
+        console.error("Error from background script: ", res.message, res.error);
+      }
+      return res;
     });
 
     
@@ -139,12 +151,13 @@ function generateFlightPriceOnClick (idNumber: string, listingDiv: HTMLElement):
 
   function getListingId(listingElement : HTMLDivElement): string | undefined {
     const listingUrlMetaTag = listingElement.querySelector('meta[itemprop="url"]') as HTMLMetaElement;
-    if (!listingUrlMetaTag) { return; }
 
-    const listingUrl = listingUrlMetaTag.getAttribute('content');
-    if (!listingUrl) { return; }
+    const listingUrl = listingUrlMetaTag.getAttribute('content') as string;
 
-    const listingId = listingUrl.split('/')[2].slice(0,8);
+    //The first 8 characters of the URL are the listing ID (sometimes 7 + ?)
+    //(dev) replace with a more reliable method
+    const listingId = listingUrl.match(/\/rooms\/(\d+)\?/)![1];
+
     return listingId;
   }
 

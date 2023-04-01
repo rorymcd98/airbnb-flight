@@ -1,5 +1,5 @@
 import { UserPreferences } from "../types-schemas/UserPreferences";
-import { AirbnbListingInfo } from "../types-schemas/ListingInfo";
+import { AirbnbListingInfo, airbnbListingInfoSchema } from "../types-schemas/ListingInfo";
 import FlightApiClient from "./flight-api-client.class";
 
 //---Set up the Flight Api Client---
@@ -36,13 +36,33 @@ const FlightApiClientInstance = FlightApiClient.getInstance(initialUserPreferenc
 chrome.runtime.onMessage.addListener(async (m, _p, sendResponse) => {
   switch(m.type) {
     case "flight-price-request":
-        console.log(m.ListingInfo)
+        console.log('Finding flight prices to ' + m.listingInfo.destinationLocation, m.listingInfo)
+
         try{
-          const res = await FlightApiClientInstance.getFlightOffersForListing(m.ListingInfo);
+          const validatedListingInfo = validateListingInfo(m.listingInfo);
+          
+          if (!validatedListingInfo) {
+            throw new Error('Invalid listing info received from content script');
+          }
+
+          const res = await FlightApiClientInstance.getFlightOffersForListing(validatedListingInfo);
           console.log(res)
           sendResponse({type: "flight-price-response", flightOffers: res.data.data});
         } catch (e) {
           console.log(e);
+        }
+
+        function validateListingInfo (listingInfo: any): AirbnbListingInfo | undefined {
+          listingInfo.outboundDate = new Date(listingInfo.outboundDate);
+          listingInfo.returnDate = new Date(listingInfo.returnDate);
+          
+          const parsedListingInfo = airbnbListingInfoSchema.safeParse(listingInfo);
+
+          if (!parsedListingInfo.success) {
+            console.error(parsedListingInfo.error);
+          } else {
+            return parsedListingInfo.data;
+          }
         }
            
       break;

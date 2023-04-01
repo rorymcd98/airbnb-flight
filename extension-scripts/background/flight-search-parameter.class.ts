@@ -38,11 +38,17 @@ export default class FlightSearchParameter {
       searchCriteria,
     };
 
-    this._flightSearchBody = FlightSearchBodySchema.parse(this._flightSearchBody);
+    const parsedFlightSearchBody = FlightSearchBodySchema.safeParse(this._flightSearchBody);
+
+    if(!parsedFlightSearchBody.success) {
+      console.log(parsedFlightSearchBody)
+      throw new Error ('Failed to validate flightSearchBody', parsedFlightSearchBody.error);
+    } else {
+      this._flightSearchBody = parsedFlightSearchBody.data;
+    }
   }
 
   public getFlightSearchBody(): FlightSearchBody{
-
     return this._flightSearchBody;
   }
 
@@ -100,7 +106,10 @@ export default class FlightSearchParameter {
     
   private assembleOriginDestinations(userPreferences: UserPreferences, airbnbListingInfo: AirbnbListingInfo, originLocationAirportCode: AirportCode, destinationLocationAirportCode: AirportCode): OriginDestination[] {
     //alias for the object we are building
+
+    //Outbound flight
     const out = {} as OriginDestination;
+    //Return flight
     const ret = {} as OriginDestination;
     const originDestinationsRes = [] as OriginDestination[];
     
@@ -108,9 +117,9 @@ export default class FlightSearchParameter {
     if(userPreferences.searchOutboundFlight) {
       out.id = '1'; 
       out.originLocationCode = originLocationAirportCode;
-      out.originRadius = 0; //(dev) Eventually give the user control
+      out.originRadius = 50; //(dev) Eventually give the user control
       out.destinationLocationCode = destinationLocationAirportCode;
-      out.destinationRadius = 0; //(dev) as above
+      out.destinationRadius = 50; //(dev) as above
       out.departureDateTimeRange = this.createDepartureDateTimeRange(userPreferences, airbnbListingInfo, true);
 
       originDestinationsRes.push(out);
@@ -119,10 +128,10 @@ export default class FlightSearchParameter {
     //Return flight
     if(userPreferences.searchReturnFlight) {
       ret.id = '2';
-      ret.originLocationCode = airbnbListingInfo.destinationLocation;
-      ret.originRadius = 0; //(dev) Eventually give the user control
-      ret.destinationLocationCode = userPreferences.originLocation;
-      ret.destinationRadius = 0; //(dev) as above
+      ret.originLocationCode = destinationLocationAirportCode;
+      ret.originRadius = 50; //(dev) Eventually give the user control
+      ret.destinationLocationCode = originLocationAirportCode;
+      ret.destinationRadius = 50; //(dev) as above
       ret.departureDateTimeRange = this.createDepartureDateTimeRange(userPreferences, airbnbListingInfo, false);
       
       originDestinationsRes.push(ret);
