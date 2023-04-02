@@ -133,11 +133,11 @@ function renderFlightPriceRequestComponent(listingElements: HTMLCollectionOf<Ele
   }
 
   function getCurrencyCodeFromPage(): string {
-    const currencySelector = '#site-content > div.c1yo0219.dir.dir-ltr > footer > div > div._1wsqynx > section > div._1udzt2s > div._18dgbyf > div > span:nth-child(2) > button > span._144l3kj';
+    const currencySelector = 'span:nth-child(2) > button > span._144l3kj';
 
     const currencyCode = document.querySelector(currencySelector)?.textContent?.trim();
-
-    if (!!currencyCode) { console.error('Could not find currency code, resorting to USD');}
+    
+    if (!!currencyCode) { console.warn('Could not find currency code, resorting to USD');}
 
     return currencyCode ?? 'USD';
   }
@@ -149,9 +149,13 @@ function renderFlightPriceRequestComponent(listingElements: HTMLCollectionOf<Ele
   }
 
   function getListingId(listingElement : HTMLDivElement): string | undefined {
-    const listingUrlMetaTag = listingElement.querySelector('meta[itemprop="url"]') as HTMLMetaElement;
+    const listingUrlMetaTag = listingElement.querySelector('meta[itemprop="url"]');
 
-    const listingUrl = listingUrlMetaTag.getAttribute('content') as string;
+    if (!listingUrlMetaTag) {return undefined;}
+
+    const listingUrl = listingUrlMetaTag.getAttribute('content');
+
+    if (!listingUrl) {return undefined;}
 
     //The first 8 characters of the URL are the listing ID (sometimes 7 + ?)
     //(dev) replace with a more reliable method
@@ -162,8 +166,11 @@ function renderFlightPriceRequestComponent(listingElements: HTMLCollectionOf<Ele
 
   function getPriceContainer(listingElement : HTMLDivElement): HTMLDivElement | undefined {
     const listingPriceClassName = '_i5duul';
-    const priceContainer = listingElement.getElementsByClassName(listingPriceClassName)[0] as HTMLDivElement;
-    return priceContainer;
+    const priceContainer = listingElement.getElementsByClassName(listingPriceClassName)[0];
+    
+    if (!priceContainer) {return undefined;}
+
+    return priceContainer as HTMLDivElement;
   }
 };
 

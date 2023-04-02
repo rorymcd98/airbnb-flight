@@ -61,7 +61,7 @@ export default class FlightSearchParameter {
   private createSearchCriteria(userPreferences: UserPreferences): SearchCriteria {
     const searchCriteria = structuredClone(FlightSearchParameter.defaultSearchCriteria);
 
-    searchCriteria.flightFilters!.connectionRestrictions!.maxNumberOfConnections = userPreferences.maxStops;
+    //searchCriteria.flightFilters!.connectionRestrictions!.maxNumberOfConnections = userPreferences.maxStops;
     searchCriteria.flightFilters!.cabinRestrictions = [
       {
         cabin: userPreferences.travelClass,
@@ -118,8 +118,8 @@ export default class FlightSearchParameter {
       out.originLocationCode = originAirportCodes[0];
       out.destinationLocationCode = destinationAirportCodes[0];
       out.departureDateTimeRange = this.createDepartureDateTimeRange(userPreferences, airbnbListingInfo, true);
-      out.alternativeOriginCodes = formatAlternativeCodes(originAirportCodes);
-      out.alternativeDestinationCodes = formatAlternativeCodes(destinationAirportCodes);
+      // out.alternativeOriginCodes = formatAlternativeCodes(originAirportCodes);
+      // out.alternativeDestinationCodes = formatAlternativeCodes(destinationAirportCodes);
 
       originDestinationsRes.push(out);
     }
@@ -130,8 +130,8 @@ export default class FlightSearchParameter {
       ret.originLocationCode = destinationAirportCodes[0];
       ret.destinationLocationCode = originAirportCodes[0];
       ret.departureDateTimeRange = this.createDepartureDateTimeRange(userPreferences, airbnbListingInfo, false);
-      ret.alternativeOriginCodes = formatAlternativeCodes(destinationAirportCodes);
-      ret.alternativeDestinationCodes = formatAlternativeCodes(originAirportCodes);
+      // ret.alternativeOriginCodes = formatAlternativeCodes(destinationAirportCodes);
+      // ret.alternativeDestinationCodes = formatAlternativeCodes(originAirportCodes);
       
       originDestinationsRes.push(ret);
     }
