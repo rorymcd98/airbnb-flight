@@ -1,7 +1,9 @@
 {
   "manifest_version": 3,
   "name": "Airbnb flight",
-  "version": "0.1.1", 
+  "version": "0.1.1",
+  "permissions": [
+  ],
   "action": {
     "default_popup": "./extension-frontend/public/popup.html"
   },

@@ -10,10 +10,10 @@ const initialUserPreferences: UserPreferences =  {
   travelClass: "ECONOMY",
   maxStops: 1,
   outboundTimeWindow: {
-    earliestDepartureTime: 6,
-    latestDepartureTime: 12,
-    earliestArrivalTime: 12,
-    latestArrivalTime: 18
+    earliestDepartureTime: 0,
+    latestDepartureTime: 24,
+    earliestArrivalTime: 0,
+    latestArrivalTime: 24
   },
   returnTimeWindow: {
     earliestDepartureTime: 0,
@@ -33,54 +33,64 @@ const FlightApiClientInstance = FlightApiClient.getInstance(initialUserPreferenc
 
 
 //---Listen to messages from the content script--
-chrome.runtime.onMessage.addListener(async (m, _p, sendResponse) => {
-  switch(m.type) {
+chrome.runtime.onMessage.addListener((m, _p, sendResponse) => {
+  switch (m.type) {
     case "flight-price-request":
-        console.log('Finding flight prices to ' + m.listingInfo.destinationLocation, m.listingInfo)
+      console.log(
+        "Finding flight prices to " + m.listingInfo.destinationLocation,
+        m.listingInfo
+      );
+      handleFlightPriceRequest(m, sendResponse);
 
-        try{
-          const validatedListingInfo = validateListingInfo(m.listingInfo);
-          
-          if (!validatedListingInfo) {
-            throw new Error('Invalid listing info received from content script');
-          }
-
-          const res = await FlightApiClientInstance.getFlightOffersForListing(validatedListingInfo);
-          console.log(res)
-          sendResponse({type: "flight-price-response", flightOffers: res.data.data});
-        } catch (e) {
-          console.log(e);
-        }
-
-        function validateListingInfo (listingInfo: any): AirbnbListingInfo | undefined {
-          listingInfo.outboundDate = new Date(listingInfo.outboundDate);
-          listingInfo.returnDate = new Date(listingInfo.returnDate);
-          
-          const parsedListingInfo = airbnbListingInfoSchema.safeParse(listingInfo);
-
-          if (!parsedListingInfo.success) {
-            console.error(parsedListingInfo.error);
-          } else {
-            return parsedListingInfo.data;
-          }
-        }
-           
-      break;
+      // Return true to indicate the response will be handled asynchronously
+      return true;
     default:
-      console.log("Unknown message type");
+      console.error("Unknown message type");
+      throw new Error("Unknown message type");
   }
-
 });
 
+async function handleFlightPriceRequest(m, sendResponse) {
+  try {
+    const validatedListingInfo = validateListingInfo(m.listingInfo);
 
+    if (!validatedListingInfo) {
+      throw new Error("Invalid listing info received from content script");
+    }
 
+    const res = await FlightApiClientInstance.getFlightOffersForListing(
+      validatedListingInfo
+    );
+
+    console.log("Returning flight prices to content script...", res.data);
+    sendResponse({ type: "flight-price-response", flightOffers: res.data.data });
+  } catch (error) {
+    sendResponse({
+      type: "flight-price-response-error",
+      message: "Error fetching flight prices",
+      error,
+    });
+    console.error(error);
+  }
+
+  function validateListingInfo (listingInfo: any): AirbnbListingInfo | undefined {
+    listingInfo.outboundDate = new Date(listingInfo.outboundDate);
+    listingInfo.returnDate = new Date(listingInfo.returnDate);
+    
+    const parsedListingInfo = airbnbListingInfoSchema.safeParse(listingInfo);
+
+    if (!parsedListingInfo.success) {
+      console.error(parsedListingInfo.error);
+      throw parsedListingInfo.error;
+    } else {
+      return parsedListingInfo.data;
+    }
+  }
+}
 
 
 
 //Upon requests from the content script, fetch flight info from the Amadeus API
-
-
-
 
 //---Backend (API calls)---
 

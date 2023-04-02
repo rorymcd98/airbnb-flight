@@ -55,63 +55,59 @@ function renderFlightPriceRequestComponent(listingElements: HTMLCollectionOf<Ele
   }
 
   
-function generateFlightPriceOnClick (idNumber: string, listingDiv: HTMLElement): (e: Event) => void {
-  return async function(e) {
-    e.stopPropagation();
+  function generateFlightPriceOnClick (idNumber: string, listingElement: HTMLElement): (e: Event) => void {
+    return async function(e) {
+      e.stopPropagation();
 
-    //Extract as much listing info as possible from the the href
-    const partialListingInfo = extractBookingDetails(listingDiv);
+      //Extract as much listing info as possible from the the href
+      const partialListingInfo = extractBookingDetails(listingElement);
 
-    const currencyCode = getCurrencyCodeFromPage();
+      const currencyCode = getCurrencyCodeFromPage();
 
-    //Extract the destinationLocation (address) from the listing div
-    const destinationLocationSelector = '#title_' + idNumber;
-    const destinationLocation = listingDiv.querySelector(destinationLocationSelector)?.textContent?.trim() as string;
+      //Extract the destinationLocation (address) from the listing div
+      const destinationLocationSelector = '#title_' + idNumber;
+      const destinationLocation = listingElement.querySelector(destinationLocationSelector)?.textContent?.trim() as string;
 
-    const listingInfo: AirbnbListingInfo = {
-      ...partialListingInfo,
-      currencyCode,
-      destinationLocation
-    }
-
-    const parsedListingInfo = airbnbListingInfoSchema.safeParse(listingInfo);
-
-    if (!parsedListingInfo.success) {
-      console.error(listingInfo);
-      throw new Error('Could not validate listing info.');
-    }
-
-
-    type FlightPriceRequest = {
-      type: 'flight-price-request';
-      id: string;
-      listingInfo: AirbnbListingInfo;
-    }
-
-    const destinationLocationMessage: FlightPriceRequest = {
-      type: 'flight-price-request',
-      id: idNumber,
-      listingInfo: parsedListingInfo.data
-    }
-
-    chrome.runtime.sendMessage(destinationLocationMessage, async function(response) {
-      const res = await response;
-      if (res.type === 'flight-price-response') {
-          console.log(res)
-      } else {
-        console.error("Error from background script: ", res.message, res.error);
+      const listingInfo: AirbnbListingInfo = {
+        ...partialListingInfo,
+        currencyCode,
+        destinationLocation
       }
-      return res;
-    });
 
-    
-  };
+      const parsedListingInfo = airbnbListingInfoSchema.safeParse(listingInfo);
 
-  //Extract booking details from the URL of the listingDiv
-  function extractBookingDetails(listingDiv: HTMLElement): {guestCounter: GuestCounter, outboundDate: Date, returnDate: Date} {
+      if (!parsedListingInfo.success) {
+        console.error(listingInfo);
+        throw new Error('Could not validate listing info.');
+      }
+
+
+      type FlightPriceRequest = {
+        type: 'flight-price-request';
+        id: string;
+        listingInfo: AirbnbListingInfo;
+      }
+
+      const destinationLocationMessage: FlightPriceRequest = {
+        type: 'flight-price-request',
+        id: idNumber,
+        listingInfo: parsedListingInfo.data
+      }
+
+      chrome.runtime.sendMessage(destinationLocationMessage, async function(response) {
+        if (response.type === 'flight-price-response') {
+            console.log(response)
+        } else {
+          console.error("Error from background script: ", response.message, response.error);
+        }
+      });  
+    };
+
+  //Extract booking details from the URL of the listingElement
+  function extractBookingDetails(listingElement: HTMLElement): {guestCounter: GuestCounter, outboundDate: Date, returnDate: Date} {
     const selectorForListingUrl = 'div.c1l1h97y.dir.dir-ltr > div > div > div > div.cy5jw6o.dir.dir-ltr > a'
 
-    const href = listingDiv.querySelector(selectorForListingUrl)?.getAttribute('href');
+    const href = listingElement.querySelector(selectorForListingUrl)?.getAttribute('href');
     //E.g. href="/rooms/42850678?adults=1&amp;category_tag=Tag%3A8225&amp;children=1&amp;enable_m3_private_room=false&amp;infants=1&amp;pets=0&amp;search_mode=flex_destinations_search&amp;check_in=2023-12-19&amp;check_out=2023-12-23&amp;previous_page_section_name=1000&amp;federated_search_id=0c937c85-f380-4c0e-a3b3-3441fb5c745e"
 
     if (href == null) { throw new Error('Could not find listing URL');}
@@ -139,10 +135,13 @@ function generateFlightPriceOnClick (idNumber: string, listingDiv: HTMLElement):
   function getCurrencyCodeFromPage(): string {
     const currencySelector = '#site-content > div.c1yo0219.dir.dir-ltr > footer > div > div._1wsqynx > section > div._1udzt2s > div._18dgbyf > div > span:nth-child(2) > button > span._144l3kj';
 
-    const currencyCode = document.querySelector(currencySelector)?.textContent?.trim() as string;
+    const currencyCode = document.querySelector(currencySelector)?.textContent?.trim();
+
+    if (!!currencyCode) { console.error('Could not find currency code, resorting to USD');}
+
     return currencyCode ?? 'USD';
   }
-};
+  };
 
   function checkAlreadyHasComponent(listingElement : HTMLDivElement): boolean {
     const existingComponent = listingElement.getElementsByClassName('FlightPriceRequestContainer')[0] as HTMLDivElement;
@@ -169,9 +168,9 @@ function generateFlightPriceOnClick (idNumber: string, listingDiv: HTMLElement):
 };
 
 function initRenderingLoop() {
-  const listingDivs = findAllListingElements();
-  if (listingDivs.length > 0) {
-    renderFlightPriceRequestComponent(listingDivs);
+  const listingElements = findAllListingElements();
+  if (listingElements.length > 0) {
+    renderFlightPriceRequestComponent(listingElements);
   }
   setTimeout(initRenderingLoop, 1000);
 }
