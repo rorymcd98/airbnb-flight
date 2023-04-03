@@ -66,7 +66,9 @@ function renderFlightPriceRequestComponent(listingElements: HTMLCollectionOf<Ele
 
       //Extract the destinationLocation (address) from the listing div
       const destinationLocationSelector = '#title_' + idNumber;
-      const destinationLocation = listingElement.querySelector(destinationLocationSelector)?.textContent?.trim() as string;
+      const destinationLocation = listingElement.querySelector(destinationLocationSelector)?.textContent?.trim();
+
+      if (!destinationLocation) { throw new Error('Could not find destination location');}
 
       const listingInfo: AirbnbListingInfo = {
         ...partialListingInfo,
@@ -115,7 +117,8 @@ function renderFlightPriceRequestComponent(listingElements: HTMLCollectionOf<Ele
     const urlParams = new URLSearchParams(href.substring(href.indexOf('?')));
 
     const guestCounter: GuestCounter = {
-      adultsCount: Number(urlParams.get('adults')),
+      //If the number of adults is not specified or 0, default to 1
+      adultsCount: Number(urlParams.get('adults')) || 1,
       childrenCount: Number(urlParams.get('children')),
       infantsCount: Number(urlParams.get('infants')),
     }
@@ -134,17 +137,17 @@ function renderFlightPriceRequestComponent(listingElements: HTMLCollectionOf<Ele
 
   function getCurrencyCodeFromPage(): string {
     const currencySelector = 'span:nth-child(2) > button > span._144l3kj';
-
     const currencyCode = document.querySelector(currencySelector)?.textContent?.trim();
+    console.log(currencyCode)
     
-    if (!!currencyCode) { console.warn('Could not find currency code, resorting to USD');}
+    if (!currencyCode) { console.warn('Could not find currency code, resorting to USD');}
 
     return currencyCode ?? 'USD';
   }
   };
 
   function checkAlreadyHasComponent(listingElement : HTMLDivElement): boolean {
-    const existingComponent = listingElement.getElementsByClassName('FlightPriceRequestContainer')[0] as HTMLDivElement;
+    const existingComponent = listingElement.getElementsByClassName('FlightPriceRequestContainer')[0];
     return !!existingComponent;
   }
 
@@ -159,7 +162,10 @@ function renderFlightPriceRequestComponent(listingElements: HTMLCollectionOf<Ele
 
     //The first 8 characters of the URL are the listing ID (sometimes 7 + ?)
     //(dev) replace with a more reliable method
-    const listingId = listingUrl.match(/\/rooms\/(\d+)\?/)![1];
+    const listingMatch = listingUrl.match(/\/rooms\/(\d+)\?/);
+    
+    if (!listingMatch) {return undefined;}
+    const listingId = listingMatch[1];
 
     return listingId;
   }

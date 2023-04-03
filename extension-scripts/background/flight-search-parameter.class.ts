@@ -152,9 +152,9 @@ export default class FlightSearchParameter {
 
     return {
       date: airbnbListingInfo[flightDateKey].toISOString().split('T')[0],
-      dateWindow: 'I3D',// +/- 3 days , in order to find better flight days
-      time: time,
-      timeWindow: timeWindow,
+      // dateWindow: 'I3D',// +/- 3 days , in order to find better flight days
+      // time: time,
+      // timeWindow: timeWindow,
     };
   }
 
