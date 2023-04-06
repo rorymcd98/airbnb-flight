@@ -10,7 +10,7 @@ export default class FlightSearchParameter {
   private _flightSearchBody: FlightSearchBody;
   private static defaultSearchCriteria: SearchCriteria = {
     oneFlightOfferPerDay: true,
-    maxFlightOffers: 7,
+    // maxFlightOffers: 7,
     flightFilters: {
       cabinRestrictions: [],
       connectionRestrictions: {},
@@ -152,7 +152,7 @@ export default class FlightSearchParameter {
 
     return {
       date: airbnbListingInfo[flightDateKey].toISOString().split('T')[0],
-      // dateWindow: 'I3D',// +/- 3 days , in order to find better flight days
+      dateWindow: 'I3D',// +/- 3 days , in order to find better flight days
       // time: time,
       // timeWindow: timeWindow,
     };

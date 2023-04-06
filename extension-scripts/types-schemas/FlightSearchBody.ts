@@ -1,12 +1,13 @@
 
 import { z } from "zod"
+import { FlightDateSchema } from "./FlightDate"
 
 
   //***************************************************//
  //*** Definition for DateTimeRange Type and Schema **//
 //***************************************************//
 const dateTimeRangeSchema = z.object({
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  date: FlightDateSchema,
   dateWindow: z.string().regex(/^[MPI][1-3]D$/).optional(),
   time: z.string().regex(/^\d{2}:\d{2}:\d{2}$/).optional(),
   timeWindow: z.string().regex(/^([1-9]|1[0-2])H$/).optional(),

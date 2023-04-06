@@ -71,7 +71,8 @@ export default class FlightApiClient {
 
     const accessToken = await this.getAccessToken();
     const apiUrl = 'https://test.api.amadeus.com/v2/shopping/flight-offers';
-  
+    // const apiUrl = 'https://api.amadeus.com/v2/shopping/flight-offers';
+
     console.log(`Searching for flight offers between ${flightSearchBody.originDestinations[0].originLocationCode} to ${flightSearchBody.originDestinations[0].destinationLocationCode}...`, flightSearchBody)
     console.log('Using access token: ' + accessToken)
 
@@ -101,7 +102,7 @@ export default class FlightApiClient {
   }
 
   //An accessToken is required for calling the amadeus API - we control access to these tokens on an AWS lambda server
-  private async getAccessToken() {
+  private async getAccessToken(): Promise<string> {
     //If we already have a non-expired accessToken, fetch that one
     if (this._accessToken && this._accessTokenExpiryTime > Date.now()) {
       console.log('Using existing access token: ' + this._accessToken + ' (expires at ' + new Date(this._accessTokenExpiryTime) +')');
@@ -111,6 +112,7 @@ export default class FlightApiClient {
     //If we're in DEV_MODE, use our key to get an accessToken
     if (privateVariables.DEV_MODE === true) {
       const tokenUrl = 'https://test.api.amadeus.com/v1/security/oauth2/token';
+      // const tokenUrl = 'https://api.amadeus.com/v1/security/oauth2/token';
       const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
       const data = `grant_type=client_credentials&client_id=${this._clientId}&client_secret=${this._clientSecret}`;
 
@@ -129,15 +131,23 @@ export default class FlightApiClient {
         this._accessToken = accessToken;
         this._accessTokenExpiryTime = Date.now() + responseData['expires_in'] * 1000;
 
+        if (responseData['warnings']) {
+          console.warn('Warnings returned from access token request: ', responseData['warnings']);
+        }
+
+        if (accessToken === undefined) {
+          throw new Error('Failed to retrieve access token from Amadeus API');
+        }
 
         console.log('New access token retrieved: ' + accessToken + ' (expires at ' + new Date(this._accessTokenExpiryTime)+')')
 
-        return accessToken;
+        return accessToken as string;
       } catch (error) {
         console.log(error);
         throw error
       }
-    } else {
+    } 
+    //else {
       //If we're not in DEV_MODE, call the AWS lambda server to get an accessToken
     //   const tokenUrl = 'https://jzv2c7j2y8.execute-api.us-east-1.amazonaws.com/dev/getAccessToken';
     //   const headers = { 'Content-Type': 'application/json' };
@@ -155,7 +165,7 @@ export default class FlightApiClient {
 
     //     this._accessToken = accessToken;
     //     this._accessTokenExpiryTime = Date.now() + responseData['expires_in'] * 1000;
-    }
+    //}
   }
 };
 

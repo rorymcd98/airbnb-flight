@@ -62,7 +62,7 @@ export default class AirportCodeApiClient {
 
     const radiusToSearchKm = 500;
     const airportCodeApiUrl = `https://test.api.amadeus.com/v1/reference-data/locations/airports?latitude=${geoCode.lat}&longitude=${geoCode.lng}&radius=${radiusToSearchKm}`;
-
+    // const airportCodeApiUrl = `https://api.amadeus.com/v1/reference-data/locations/airports?latitude=${geoCode.lat}&longitude=${geoCode.lng}&radius=${radiusToSearchKm}`;
     try {
       console.log('Fetching aiport code...')
       const response = await fetch(airportCodeApiUrl, {
@@ -95,6 +95,7 @@ export default class AirportCodeApiClient {
 
 
       const parsedMainAirportCodes = [parsedMainAirportCode.data, topThreeAirportCodes[1], topThreeAirportCodes[2]];
+      
       const airportAndCityCodes = parsedMainAirportCodes.map((airportCode: AirportCode): (AirportCode|undefined) => {
         return getCityCode(airportCode);
       });
