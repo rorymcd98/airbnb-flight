@@ -21,7 +21,7 @@ const TimeWindow = z.object({
   }).refine(checkTimesAreConsistent, {message: "Earliest departure/arrival time must be before latest departure/arrival time."})
 
 export const userPreferencesSchema = z.object({
-  originLocation: z.string().regex(/^[A-Z]{3}$/),
+  originLocation: z.string(),
   searchOutboundFlight: z.boolean(),
   searchReturnFlight: z.boolean(),
   travelClass: z.union([z.literal("ECONOMY"), z.literal("PREMIUM_ECONOMY"), z.literal("BUSINESS"), z.literal("FIRST")]),

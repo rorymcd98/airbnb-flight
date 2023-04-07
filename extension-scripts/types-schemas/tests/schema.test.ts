@@ -1,8 +1,8 @@
 
-import { FlightSearchBody, FlightSearchBodySchema } from './FlightSearchBody'
-import { AirbnbListingInfo, airbnbListingInfoSchema} from './ListingInfo'
-import { UserPreferences, userPreferencesSchema } from './UserPreferences'
-import { AirportCodeSchema } from './AirportCode'
+import { FlightSearchBody, FlightSearchBodySchema } from '../FlightSearchBody'
+import { AirbnbListingInfo, airbnbListingInfoSchema} from '../ListingInfo'
+import { UserPreferences, userPreferencesSchema } from '../UserPreferences'
+import { AirportCodeSchema } from '../AirportCode'
 import {describe, test, expect} from '@jest/globals';
 
 describe('AirportCode Schema checker', () => {
@@ -130,7 +130,7 @@ describe('FlightSearchBody Schema checker', () => {
 describe('userPreferencesSchema', () => {
   test('should validate a valid user preferences object', () => {
     const userPreferences: UserPreferences =  {
-      originLocation: 'LHR',
+      originLocation: 'London',
       searchOutboundFlight: true,
       searchReturnFlight: true,
       travelClass: "ECONOMY",
@@ -153,23 +153,21 @@ describe('userPreferencesSchema', () => {
 
   test('Should fill in the default time values for timeWindows (0, 24)', () => {
     const userPreferences: UserPreferences =  {
-      originLocation: 'LHR',
+      originLocation: 'London',
       searchOutboundFlight: true,
       searchReturnFlight: true,
       travelClass: "ECONOMY",
       maxStops: 1,
-      outboundTimeWindow: {
-
-      } as any,
+      outboundTimeWindow: {} as any,
       returnTimeWindow: {
         earliestDepartureTime: 1,
         latestDepartureTime: 19
       } as any
     };
 
-    const $ = userPreferencesSchema.parse(userPreferences);
-    const parsedReturnTimeWindow = $.returnTimeWindow;
-    const parsedOutboundimeWindow = $.outboundTimeWindow;
+    const parsedUserPreferences = userPreferencesSchema.parse(userPreferences);
+    const parsedReturnTimeWindow = parsedUserPreferences.returnTimeWindow;
+    const parsedOutboundimeWindow = parsedUserPreferences.outboundTimeWindow;
 
     const expectedOutboundTimeWindow = {
       earliestDepartureTime: 0,
@@ -189,58 +187,60 @@ describe('userPreferencesSchema', () => {
 
 
   test('should not validate an invalid user preferences object with inconsistent times', () => {
-    const userPreferences: UserPreferences =  {
-      originLocation: 'LHR',
+    const userPreferences1: UserPreferences =  {
+      originLocation: 'London',
+      searchOutboundFlight: true,
+      searchReturnFlight: true,
+      travelClass: "ECONOMY",
+      maxStops: 1,
+      // earliest departure time is after latest departure time
+      outboundTimeWindow: {
+        earliestDepartureTime: 5,
+        latestDepartureTime: 4,
+        earliestArrivalTime: 1,
+        latestArrivalTime: 2
+      },
+      returnTimeWindow: {
+        earliestDepartureTime: 1,
+        latestDepartureTime: 2,
+        earliestArrivalTime: 1,
+        latestArrivalTime: 2
+      }
+    };
+    expect(() => userPreferencesSchema.parse(userPreferences1)).toThrowError(
+      'Earliest departure/arrival time must be before latest departure/arrival time.',
+    );
+
+    const userPreferences2: UserPreferences =  {
+      originLocation: 'London',
       searchOutboundFlight: true,
       searchReturnFlight: true,
       travelClass: "ECONOMY",
       maxStops: 1,
       outboundTimeWindow: {
-        earliestDepartureTime: 16,
-        latestDepartureTime: 12,
-        earliestArrivalTime: 12,
-        latestArrivalTime: 1
+        earliestDepartureTime: 1,
+        latestDepartureTime: 2,
+        earliestArrivalTime: 1,
+        latestArrivalTime: 2
       },
+      // earliest arrival time is after latest arrival time
       returnTimeWindow: {
-        earliestDepartureTime: 10,
+        earliestDepartureTime: 1,
         latestDepartureTime: 2,
         earliestArrivalTime: 10,
         latestArrivalTime: 2
       }
     };
-    expect(() => userPreferencesSchema.parse(userPreferences)).toThrowError(
+    expect(() => userPreferencesSchema.parse(userPreferences2)).toThrowError(
       'Earliest departure/arrival time must be before latest departure/arrival time.',
     );
+
   });
 
-  test('should not validate an invalid user preferences object with invalid originLocation', () => {
-    const userPreferences: UserPreferences =  {
-      originLocation: 'lhr', // lowercase is invalid
-      searchOutboundFlight: true,
-      searchReturnFlight: true,
-      travelClass: "ECONOMY",
-      maxStops: 1,
-      outboundTimeWindow: {
-        earliestDepartureTime: 6,
-        latestDepartureTime: 12,
-        earliestArrivalTime: 12,
-        latestArrivalTime: 18
-      },
-      returnTimeWindow: {
-        earliestDepartureTime: 0,
-        latestDepartureTime: 24,
-        earliestArrivalTime: 0,
-        latestArrivalTime: 24
-      }
-    };
-    expect(() => userPreferencesSchema.parse(userPreferences)).toThrowError(
-      /invalid_string/
-    );
-  });
 
   test('should through an error if the travelClass is not one of ECONOMY etc.', () => {
     const userPreferences: UserPreferences =  {
-      originLocation: 'LHR',
+      originLocation: 'London',
       searchOutboundFlight: true,
       searchReturnFlight: true,
       travelClass: "SUPER_CLASS" as any, //this is invalid
@@ -345,4 +345,14 @@ describe('airbnbListingInfoSchema', () => {
     };
     expect(() => airbnbListingInfoSchema.parse(airbnbListingInfo)).toThrow(/invalid/);
     });
+});
+
+import {FlightOffersResponse, FlightOffersResponseSchema } from '../FlightOffersResponse';
+import ExpectedFlightOffersResponse from './flightOffersResponse.test.json';
+
+describe('FlightOffersRespoonseSchema', () => {
+  test('should validate a valid flight offers response', () => {
+    const parsedResponse = FlightOffersResponseSchema.safeParse(ExpectedFlightOffersResponse);
+    expect(parsedResponse.success).toBeTruthy();
+  });
 });

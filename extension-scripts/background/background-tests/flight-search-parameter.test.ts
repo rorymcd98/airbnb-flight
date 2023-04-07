@@ -3,6 +3,7 @@ import { FlightSearchBody} from '../../types-schemas/FlightSearchBody'
 import { AirbnbListingInfo} from '../../types-schemas/ListingInfo'
 import { UserPreferences } from '../../types-schemas/UserPreferences'
 import {describe, test, expect} from '@jest/globals';
+import { TopAirportCodes } from '../airportCode-api-client.class';
 
 describe('FlightSearchParameter class', () => {
   describe('createFlightSearchBody', () => {
@@ -39,10 +40,10 @@ describe('FlightSearchParameter class', () => {
         currencyCode: 'GBP'
       };
 
-      const originLocationAirportCode = 'LHR';
-      const destinationLocationAirportCode = 'PRG';
+      const originAirportCodes: TopAirportCodes = ['LON', 'MAN', undefined];
+      const destinationAirportCodes: TopAirportCodes = ['PRG', 'BER', 'WRO'];
         
-      const instanceOfFlightSearchParameter = new FlightSearchParameter(userPreferences, airbnbListingInfo, originLocationAirportCode, destinationLocationAirportCode);
+      const instanceOfFlightSearchParameter = new FlightSearchParameter(userPreferences, airbnbListingInfo, originAirportCodes, destinationAirportCodes);
   
       const flightSearchBody: FlightSearchBody = instanceOfFlightSearchParameter.getFlightSearchBody();
   
@@ -52,29 +53,25 @@ describe('FlightSearchParameter class', () => {
         originDestinations: [
           {
             id: "1",
-            originLocationCode: "LHR",
+            originLocationCode: "LON",
             destinationLocationCode: "PRG",
             departureDateTimeRange: {
               date: "2023-03-16",
               dateWindow: "I3D",
-              time: "09:00:00",
-              timeWindow: "3H",
+              // time: "09:00:00",
+              // timeWindow: "3H",
             },
-            destinationRadius: 0,
-            originRadius: 0
           },
           {
             id: "2",
             originLocationCode: "PRG",
-            destinationLocationCode: "LHR",
+            destinationLocationCode: "LON",
             departureDateTimeRange: {
               date: "2023-03-20",
               dateWindow: "I3D",
-              time: "12:00:00",
-              timeWindow: "12H",
+              // time: "12:00:00",
+              // timeWindow: "12H",
             },
-            destinationRadius: 0,
-            originRadius: 0
           }
         ],
         travelers: [
@@ -93,7 +90,6 @@ describe('FlightSearchParameter class', () => {
         ],
         sources: ["GDS"],
         searchCriteria: {
-          maxFlightOffers: 7,
           flightFilters: {
             cabinRestrictions: [
               {
@@ -103,7 +99,6 @@ describe('FlightSearchParameter class', () => {
               },
             ],
             connectionRestrictions: {
-              maxNumberOfConnections: 0,
             }
           },
           oneFlightOfferPerDay: true,
@@ -182,11 +177,14 @@ describe('FlightSearchParameter class', () => {
       currencyCode: 'GBP'
     };
 
-    const originLocationAirportCode2 = 'LHR';
-    const destinationLocationAirportCode2 = 'PRG';
+    const originAirportCodes1: TopAirportCodes = ['LON', 'MAN', undefined];
+    const destinationAirportCodes1: TopAirportCodes = ['PRG', 'BER', 'WRO'];
+
+    const originAirportCodes2: TopAirportCodes = ['LON', 'MAN', undefined];
+    const destinationAirportCodes2: TopAirportCodes = ['PRG', 'BER', 'WRO'];
       
-    const instanceOfFlightSearchParameter1 = new FlightSearchParameter(userPreferences1, airbnbListingInfo1, originLocationAirportCode1, destinationLocationAirportCode1);
-    const instanceOfFlightSearchParameter2 = new FlightSearchParameter(userPreferences2, airbnbListingInfo2, originLocationAirportCode2, destinationLocationAirportCode2);
+    const instanceOfFlightSearchParameter1 = new FlightSearchParameter(userPreferences1, airbnbListingInfo1, originAirportCodes1, destinationAirportCodes1);
+    const instanceOfFlightSearchParameter2 = new FlightSearchParameter(userPreferences2, airbnbListingInfo2, originAirportCodes2, destinationAirportCodes2);
     const hash1 = instanceOfFlightSearchParameter1.hashifyInstance();
     const hash2 = instanceOfFlightSearchParameter2.hashifyInstance();
 
@@ -226,9 +224,6 @@ describe('FlightSearchParameter class', () => {
       currencyCode: 'GBP'
     };
 
-    const originLocationAirportCode1 = 'LHR';
-    const destinationLocationAirportCode1 = 'PAG';
-
     const userPreferences2: UserPreferences =  {
       originLocation: 'LHR',
       searchOutboundFlight: true,
@@ -260,12 +255,15 @@ describe('FlightSearchParameter class', () => {
       },
       currencyCode: 'GBP'
     };
+    
+    const originAirportCodes1: TopAirportCodes = ['LON', 'MAN', undefined];
+    const destinationAirportCodes1: TopAirportCodes = ['PRG', 'BER', 'WRO'];
 
-    const originLocationAirportCode2 = 'LHR';
-    const destinationLocationAirportCode2 = 'PRG';
+    const originAirportCodes2: TopAirportCodes = ['LON', 'MAN', undefined];
+    const destinationAirportCodes2: TopAirportCodes = ['PRG', 'BER', 'WRO'];
       
-    const instanceOfFlightSearchParameter1 = new FlightSearchParameter(userPreferences1, airbnbListingInfo1, originLocationAirportCode1, destinationLocationAirportCode1);
-    const instanceOfFlightSearchParameter2 = new FlightSearchParameter(userPreferences2, airbnbListingInfo2, originLocationAirportCode2, destinationLocationAirportCode2);
+    const instanceOfFlightSearchParameter1 = new FlightSearchParameter(userPreferences1, airbnbListingInfo1, originAirportCodes1, destinationAirportCodes1);
+    const instanceOfFlightSearchParameter2 = new FlightSearchParameter(userPreferences2, airbnbListingInfo2, originAirportCodes2, destinationAirportCodes2);
     const hash1 = instanceOfFlightSearchParameter1.hashifyInstance();
     const hash2 = instanceOfFlightSearchParameter2.hashifyInstance();
 

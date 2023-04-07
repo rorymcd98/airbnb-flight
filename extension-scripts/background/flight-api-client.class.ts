@@ -4,8 +4,7 @@ import { AirbnbListingInfo } from '../types-schemas/ListingInfo';
 import { UserPreferences } from '../types-schemas/UserPreferences';
 import AirportCodeApiClient from './airportCode-api-client.class';
 import privateVariables from '../../private-variables';
-
-type FlightOffersResponse = any; // (dev) need to define a FlightSearchResponse class
+import { FlightOffersResponse, FlightOffersResponseSchema } from '../types-schemas/FlightOffersResponse';
 
 export default class FlightApiClient {
   private static _instance: FlightApiClient;
@@ -31,7 +30,7 @@ export default class FlightApiClient {
   public static getInstance(initialUserPreferences: UserPreferences): FlightApiClient {
     if (!FlightApiClient._instance) {
       FlightApiClient._instance = new FlightApiClient(initialUserPreferences);
-      console.log('Initliazed FlightApiClient: ' + FlightApiClient._instance);
+      console.log('Initialized FlightApiClient: ', FlightApiClient._instance);
     } else {
       throw new Error('FlightApiClient is a singleton class, cannot create further instances.');
     }
@@ -86,15 +85,21 @@ export default class FlightApiClient {
         body: JSON.stringify(flightSearchBody),
       });
 
-      const data = await response.json();
+      const flightOffersData = await response.json();
 
-      if (data.warnings) {
-        console.warn('Warnings returned from flight search: ', data.warnings);
+      if (flightOffersData.warnings) {
+        console.warn('Warnings returned from flight search: ', flightOffersData.warnings);
       }
 
-      console.log(data)
+      console.log(flightOffersData)
 
-      return data;
+      const parsedFlightOffersData = FlightOffersResponseSchema.safeParse(flightOffersData)
+
+      if(!parsedFlightOffersData.success) {
+        throw parsedFlightOffersData.error;
+      } else {
+        return parsedFlightOffersData.data;
+      }
     } catch (error: any) {
       console.error(`Failed to search for flight offers: ${error.message}`);
       throw error;
@@ -146,26 +151,30 @@ export default class FlightApiClient {
         console.log(error);
         throw error
       }
-    } 
-    //else {
+    } else {
       //If we're not in DEV_MODE, call the AWS lambda server to get an accessToken
-    //   const tokenUrl = 'https://jzv2c7j2y8.execute-api.us-east-1.amazonaws.com/dev/getAccessToken';
-    //   const headers = { 'Content-Type': 'application/json' };
-    //   const data = { 'client_id': this._clientId, 'client_secret': this._clientSecret };
+      const tokenUrl = ''//aws url
+      const headers = { 'Content-Type': 'application/json' };
+      const data = { 'client_id': this._clientId, 'client_secret': this._clientSecret };
 
-    //   try {
-    //     const response = await fetch(tokenUrl, {
-    //       method: 'POST',
-    //       headers,
-    //       body: JSON.stringify(data),
-    //     });
+      try {
+        const response = await fetch(tokenUrl, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(data),
+        });
 
-    //     const responseData = await response.json();
-    //     const accessToken = responseData['access_token'];
+        const responseData = await response.json();
+        const accessToken = responseData['access_token'];
 
-    //     this._accessToken = accessToken;
-    //     this._accessTokenExpiryTime = Date.now() + responseData['expires_in'] * 1000;
-    //}
+        this._accessToken = accessToken;
+        this._accessTokenExpiryTime = Date.now() + responseData['expires_in'] * 1000;
+        return accessToken as string;
+      } catch (error) {
+        console.log(error);
+        throw error;
+      }
+    }
   }
 };
 

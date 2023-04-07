@@ -28,7 +28,7 @@ export default class AirportCodeApiClient {
   public static getInstance(): AirportCodeApiClient {
     if (!AirportCodeApiClient._instance) {
       AirportCodeApiClient._instance = new AirportCodeApiClient();
-      console.log('Initliazed AirportCodeApiClient: ' + AirportCodeApiClient._instance);
+      console.log('Initialized AirportCodeApiClient: ', AirportCodeApiClient._instance);
     } else {
       throw new Error('AirportCodeApiClient is a singleton class, cannot create further instances.');
     }

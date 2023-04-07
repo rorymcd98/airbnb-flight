@@ -1,9 +1,7 @@
 import {describe, test, expect} from '@jest/globals';
-import { FlightSearchBody } from '../../types-schemas/FlightSearchBody';
-import FlightSearchParameter from './../flight-search-parameter.class';
 import FlightApiClient from '../flight-api-client.class';
 import { UserPreferences } from './../../types-schemas/UserPreferences';
-import { airbnbListingInfoSchema } from './../../types-schemas/ListingInfo';
+
 
 describe('FlightApiClient class', () => {
   test('Should create a single instance of the class when .getInstance is called, but should throw an error when called again', async () => {
