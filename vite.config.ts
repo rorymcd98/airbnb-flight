@@ -19,14 +19,14 @@ export default defineConfig({
       react()
     ]
   },
-  root: './',
+  root: '',
   build: {
     emptyOutDir: true,
     target: 'chrome88',
     assetsDir: 'extension-frontend/src/assets',
     manifest: false,
   },
-  server: {
-    open: 'public/popup.html'
-  }
+  // server: {
+  //   open: 'public/popup.html'
+  // }
 })

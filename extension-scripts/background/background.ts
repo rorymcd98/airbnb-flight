@@ -58,12 +58,12 @@ async function handleFlightPriceRequest(m, sendResponse) {
       throw new Error("Invalid listing info received from content script");
     }
 
-    const res = await FlightApiClientInstance.getFlightOffersForListing(
+    const flightOffers = await FlightApiClientInstance.getFlightOffersForListing(
       validatedListingInfo
     );
 
-    console.log("Returning flight prices to content script...", res.data);
-    sendResponse({ type: "flight-price-response", flightOffers: res.data.data });
+    console.log("Returning flight prices to content script...", flightOffers.data);
+    sendResponse({ type: "flight-price-response", flightOffers: flightOffers.data });
   } catch (error) {
     sendResponse({
       type: "flight-price-response-error",
