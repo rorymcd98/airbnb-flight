@@ -1,100 +1,43 @@
-export type FlightOffer = {
-  type: string;
-  id: string;
-  source: string;
-  instantTicketingRequired: boolean;
-  nonHomogeneous: boolean;
-  oneWay: boolean;
-  lastTicketingDate: string;
-  lastTicketingDateTime: string;
-  itineraries: Array<{
-    duration: string;
-    segments: Array<{
-      departure: {
-        iataCode: string;
-        terminal: string;
-        at: string;
-      };
-      arrival: {
-        iataCode: string;
-        terminal: string;
-        at: string;
-      };
-      carrierCode: string;
-      number: string;
-      aircraft: {
-        code: string;
-      };
-      operating: {
-        carrierCode: string;
-      };
-      id: string;
-      numberOfStops: number;
-      blacklistedInEU: boolean;
-    }>;
-  }>;
-  price: {
-    currency: string;
-    total: string;
-    base: string;
-    fees: Array<{
-      amount: string;
-      type: string;
-    }>;
-    grandTotal: string;
-    additionalServices: Array<{
-      amount: string;
-      type: string;
-    }>;
-  };
-  pricingOptions: {
-    fareType: Array<string>;
-    includedCheckedBagsOnly: boolean;
-  };
-  validatingAirlineCodes: Array<string>;
-  travelerPricings: Array<{
-    travelerId: string;
-    fareOption: string;
-    travelerType: string;
-    price: {
-      currency: string;
-      total: string;
-      base: string;
-    };
-    fareDetailsBySegment: Array<{
-      segmentId: string;
-      cabin: string;
-      fareBasis: string;
-      brandedFare: string;
-      class: string;
-      includedCheckedBags: {
-        quantity: number;
-      };
-    }>;
-  }>;
-};
 
-export type CheapestFlight = {
-  outboundDate: FlightDate;
-  outboundTime: string;
-  returnDate: FlightDate;
-  returnTime: string;
-  flightPrice: string;
-  carrier: string;
-};
 
 import { FlightDate } from '../types-schemas/FlightDate';
 import { AirbnbListingInfo } from '../types-schemas/ListingInfo';
+import { FlightOffer } from '../types-schemas/FlightOffersResponse';
+import { UserPreferences } from '../types-schemas/UserPreferences';
 
-
-interface FlightOffersData {
+export type FrontendChartData = {
   cheapestFlightsTripDuration: Record<FlightDate, (CheapestFlight | null )>;
   cheapestFlightsAnyDuration: Record<FlightDate, (CheapestFlight | null )>;
   cheapestFlightOutboundReturn: Record<FlightDate, Record<FlightDate, (CheapestFlight | null)>>;
 }
 
-export function generateFrontendOffersData(flightOffers: FlightOffer[], listingInfo: AirbnbListingInfo): FlightOffersData {
-  const cheapestFlights: FlightOffersData = {
+export type CheapestFlight = {
+  outboundDate: FlightDate;
+  outboundTime: string;
+  returnDate: FlightDate| null;
+  returnTime: string | null;
+  flightPrice: number;
+  carrier: string| null | undefined;
+};
+
+export type ChartMeta = {
+  currency: string;
+  originLocation: string;
+  destinationLocation: string;
+  tripDuration: number;
+}
+
+export function generateChartMeta(listingInfo: AirbnbListingInfo, userPreferences: UserPreferences): ChartMeta {  
+  return {
+      currency: listingInfo.currencyCode,
+      originLocation: userPreferences.originLocation,
+      destinationLocation: listingInfo.destinationLocation,
+      tripDuration: findTripDuration_Days(listingInfo)
+    }
+}
+
+export function generateFrontendChartData(flightOffers: FlightOffer[], listingInfo: AirbnbListingInfo): FrontendChartData {
+  const cheapestFlights: FrontendChartData = {
     cheapestFlightsTripDuration: {},
     cheapestFlightsAnyDuration: {},
     cheapestFlightOutboundReturn: {}
@@ -165,20 +108,29 @@ export function generateFrontendOffersData(flightOffers: FlightOffer[], listingI
   return cheapestFlights;
 }
 
-function convertOfferToCheapestFlight(flightOffer: FlightOffer): CheapestFlight {
-  const outboundArray = flightOffer.itineraries[0].segments[0].departure.at.split('T');
-  const returnArray = flightOffer.itineraries[1].segments[0].departure.at.split('T');
+function convertOfferToCheapestFlight(flightOffer: FlightOffer): (CheapestFlight| null) {
+
+  const outboundArray = flightOffer?.itineraries?.[0]?.segments?.[0]?.departure?.at?.split('T') || [];
+  const returnArray = flightOffer?.itineraries?.[1]?.segments?.[0]?.departure?.at?.split('T') || [];
+  
+  const flightPrice = flightOffer?.price?.total;
+  const carrier = flightOffer?.itineraries?.[0]?.segments?.[0]?.carrierCode;
+  
+  if (!flightPrice || !outboundArray) return null;
+
+  const intFlightPrice = parseInt(flightPrice);
 
   return {
     outboundDate: outboundArray[0],
-    outboundTime: formatTime(outboundArray[1]),
+    outboundTime: formatTime(outboundArray[1]) as string,
     returnDate: returnArray[0],
     returnTime: formatTime(returnArray[1]),
-    flightPrice: flightOffer.price.total,
-    carrier: flightOffer.itineraries[0].segments[0].carrierCode
+    flightPrice: intFlightPrice,
+    carrier
   }
 
-  function formatTime(timeString: string): string {
+  function formatTime(timeString: string): (string | null) {
+    if (!timeString) return null;
     const [hours, minutes] = timeString.split(':');
     return `${hours}:${minutes}`;
   }
@@ -216,12 +168,12 @@ function generateDatesRange(startDate: FlightDate, endDate: FlightDate): FlightD
 
 //Utility function for getting our extrema dates
 function findDate(flightOffers: FlightOffer[], itineraryIndex: number, comparator: (a: FlightDate, b: FlightDate) => boolean): FlightDate {
-  let resultDate = flightOffers[0].itineraries[itineraryIndex].segments[0].departure.at.split('T')[0];
+  let resultDate = flightOffers?.[0]?.itineraries?.[itineraryIndex]?.segments?.[0]?.departure?.at?.split('T')?.[0] as FlightDate;
 
   flightOffers.forEach((flightOffer) => {
-    const flightOfferDate = flightOffer.itineraries[itineraryIndex].segments[0].departure.at.split('T')[0];
+    const flightOfferDate = flightOffer?.itineraries?.[itineraryIndex]?.segments?.[0]?.departure?.at?.split('T')?.[0];
 
-    if (comparator(flightOfferDate, resultDate)) {
+    if (typeof flightOfferDate == 'string' && comparator(flightOfferDate, resultDate)) {
       resultDate = flightOfferDate;
     }
   });
@@ -250,7 +202,7 @@ function findCheapestOfArray(flightOffers: FlightOffer[]): CheapestFlight | null
   let cheapestFlightOffer = flightOffers[0];
 
   flightOffers.forEach((flightOffer) => {
-    if (parseFloat(flightOffer.price.total) < parseFloat(cheapestFlightOffer.price.total)) {
+    if (parseFloat(flightOffer.price!.total!) < parseFloat(cheapestFlightOffer.price!.total!)) {
       cheapestFlightOffer = flightOffer;
     }
   });
@@ -264,7 +216,7 @@ function filterByDate(flightOffers: FlightOffer[], flightDateFilter: string, fil
   const outboundOrReturn = filterOutboundOrReturn ? 0 : 1;
   
   const filteredFlights = flightOffers.filter((flightOffer) => {
-    const flightOfferDate = flightOffer.itineraries[outboundOrReturn].segments[0].departure.at.split('T')[0];
+    const flightOfferDate = flightOffer?.itineraries?.[outboundOrReturn]?.segments?.[0]?.departure?.at?.split('T')[0];
     return flightOfferDate === flightDateFilter;
   });
 

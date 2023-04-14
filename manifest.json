@@ -5,7 +5,7 @@
   "permissions": [
   ],
   "action": {
-    "default_popup": "./extension-frontend/public/popup.html"
+    "default_popup": "extension-frontend/public/popup.html"
   },
   "background": {
     "service_worker": "./extension-scripts/background/background.ts"

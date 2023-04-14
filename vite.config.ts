@@ -11,7 +11,6 @@ export default defineConfig({
     'process.env.GOOGLE_MAPS_API_KEY': JSON.stringify(process.env.GOOGLE_MAPS_API_KEY),
   },
   plugins: [
-    // EnvironmentPlugin(['GOOGLE_MAPS_API_KEY']),
     crx({manifest}),
   ],
   worker: {
@@ -26,7 +25,7 @@ export default defineConfig({
     assetsDir: 'extension-frontend/src/assets',
     manifest: false,
   },
-  // server: {
-  //   open: 'public/popup.html'
-  // }
+  server: {
+    open: './extension-frontend/dev-view/dev.html'
+  }
 })

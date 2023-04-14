@@ -1,7 +1,7 @@
-import { z } from "zod"
-  //***************************************************//
- //*** Definition for a flightOffer Type and Schema **//
-//***************************************************//
+import { z } from 'zod'
+//* **************************************************//
+//* ** Definition for a flightOffer Type and Schema **//
+//* **************************************************//
 const FlightOfferSchema = z.object({
   type: z.string(),
   id: z.string(),
@@ -40,7 +40,7 @@ const FlightOfferSchema = z.object({
         })
       ).optional()
     })
-  ).optional(),
+  ),
   price: z.object({
     currency: z.string().optional(),
     total: z.string().optional(),
@@ -92,26 +92,26 @@ const FlightOfferSchema = z.object({
 
 /**
  * @typedef FlightOffer for date and time range objects which are used for the departure and arrival time for originDesination objects
- * 
+ *
  * @remarks Check the documentation here https://developers.amadeus.com/self-service/category/air/api-doc/flight-offers-search/api-reference
  * */
-export type FlightOffer = z.infer<typeof FlightOfferSchema>;
+export type FlightOffer = z.infer<typeof FlightOfferSchema>
 
-  //********************************************//
- //*** Definition for a FlightOffersResponse  **//
-//********************************************//
+//* *******************************************//
+//* ** Definition for a FlightOffersResponse  **//
+//* *******************************************//
 export const FlightOffersResponseSchema = z.object({
   warnings: z.array(z.any()).optional(),
   data: z.array(FlightOfferSchema),
   meta: z.object({
     count: z.number(),
-    oneWayCombinations: z.array(z.any()).optional(),
+    oneWayCombinations: z.array(z.any()).optional()
   }).optional(),
-  dictionaries: z.any().optional(),
+  dictionaries: z.any().optional()
 })
 /**
  * @typedef FlightOfferResponse received from the Amadeus API
- * 
- * @remarks Check the documentation here https://developers.amadeus.com/self-service/category/air/api-doc/flight-offers-search/api-reference 
+ *
+ * @remarks Check the documentation here https://developers.amadeus.com/self-service/category/air/api-doc/flight-offers-search/api-reference
  */
-export type FlightOffersResponse = z.infer<typeof FlightOffersResponseSchema>;
+export type FlightOffersResponse = z.infer<typeof FlightOffersResponseSchema>

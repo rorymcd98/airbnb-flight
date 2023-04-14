@@ -1,11 +1,12 @@
 import React from "react";
 import { createRoot } from 'react-dom/client';
 import { AirbnbListingInfo, airbnbListingInfoSchema, GuestCounter} from "../types-schemas/ListingInfo";
-
+import { FrontendChartData, ChartMeta } from "../background/generate-frontend-chart";
+import FlightOffersChart from "../../extension-frontend/flight-offers-chart/components/FlightOffersChart";
+import { deserialize } from "v8";
 
 
 //---Add 'FlightPriceRequestButton' buttons to the page---
-
 //React component for the FlightPriceRequestButton
 type FlightPriceRequestProps = {
   idNumber: string;
@@ -51,7 +52,6 @@ function renderFlightPriceRequestComponent(listingElements: HTMLCollectionOf<Ele
     const flightPriceOnClick = generateFlightPriceOnClick(extensionListingId, curListing);
 
     createRoot(attachmentPoint).render(<FlightPriceRequest idNumber={extensionListingId} flightPriceRequestOnClick={flightPriceOnClick}/>);
-
   }
 
   
@@ -60,7 +60,7 @@ function renderFlightPriceRequestComponent(listingElements: HTMLCollectionOf<Ele
       e.stopPropagation();
 
       //Extract as much listing info as possible from the the href
-      const partialListingInfo = extractBookingDetails(listingElement);
+      const partialListingInfo = extractBookingDetails(listingElement) as Partial<AirbnbListingInfo>;
 
       const currencyCode = getCurrencyCodeFromPage();
 
@@ -76,33 +76,7 @@ function renderFlightPriceRequestComponent(listingElements: HTMLCollectionOf<Ele
         destinationLocation
       }
 
-      const parsedListingInfo = airbnbListingInfoSchema.safeParse(listingInfo);
-
-      if (!parsedListingInfo.success) {
-        console.error(listingInfo);
-        throw new Error('Could not validate listing info.');
-      }
-
-
-      type FlightPriceRequest = {
-        type: 'flight-price-request';
-        id: string;
-        listingInfo: AirbnbListingInfo;
-      }
-
-      const destinationLocationMessage: FlightPriceRequest = {
-        type: 'flight-price-request',
-        id: idNumber,
-        listingInfo: parsedListingInfo.data
-      }
-
-      chrome.runtime.sendMessage(destinationLocationMessage, async function(response) {
-        if (response.type === 'flight-price-response') {
-            console.log(response)
-        } else {
-          console.error("Error from background script: ", response.message, response.error);
-        }
-      });  
+      callBackgroundFlightApi(idNumber, listingInfo);
     };
 
   //Extract booking details from the URL of the listingElement
@@ -191,9 +165,54 @@ function initRenderingLoop() {
 initRenderingLoop();
 
 //---Send listing information on 'request-flights-button' button click---
+function callBackgroundFlightApi(idNumber: string, listingInfo: AirbnbListingInfo): void {
+  const parsedListingInfo = airbnbListingInfoSchema.safeParse(listingInfo);
 
+  if (!parsedListingInfo.success) {
+    console.error(listingInfo);
+    throw new Error('Could not validate listing info.');
+  }
+
+  type FlightPriceRequest = {
+    type: 'flight-price-request';
+    id: string;
+    listingInfo: AirbnbListingInfo;
+  }
+  const flightPriceRequestMessage: FlightPriceRequest = {
+    type: 'flight-price-request',
+    id: idNumber,
+    listingInfo: parsedListingInfo.data
+  }
+
+  chrome.runtime.sendMessage(flightPriceRequestMessage, async function(response) {
+    if (response.type === 'flight-price-response') {
+
+        console.log('I have been called function callBackgroundFlightApi')
+        //const deserialisedFlightOffersData = deserialisedFlightOffersData(response.flightOffersData);
+        renderChartOnPage(response.flightOffersData, response.chartMeta);
+    } else {
+      console.error("Error from background script: ", response.message, response.error);
+    }
+  });  
+}
 
 //---Receive information from the background script---
 
 
 //---Display flight information on the page---
+function renderChartOnPage(frontendChartData: FrontendChartData, chartMeta: ChartMeta): void {
+  console.log('I have been called function renderChartOnPage')
+  
+  const chartContainer = document.createElement('div');
+  chartContainer.id = 'flight-chart-container';
+  chartContainer.className = 'absolute top-0 left-0 w-full h-full z-50';
+
+  createRoot(chartContainer).render(<FlightOffersChart flightOffersData={frontendChartData} chartMeta={chartMeta}/>)
+}
+
+function removeChartFromPage(): void {
+  const chartContainer = document.getElementById('flight-chart-container');
+  if (chartContainer) {
+    chartContainer.remove();
+  }
+}
