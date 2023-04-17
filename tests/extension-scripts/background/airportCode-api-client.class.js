@@ -1,13 +1,13 @@
-//Helper types and schemas
+// Helper types and schemas
 import zod from 'zod';
 import { AirportCodeSchema } from '../types-schemas/AirportCode';
 import privateVariables from '../../private-variables';
 const LatLngSchema = zod.object({
     lat: zod.number(),
-    lng: zod.number(),
+    lng: zod.number()
 });
-//Takes in addresses: Fetches GeoCodes -> Fetches nearest airport codes
-//Memoizes address -> airport code mapping
+// Takes in addresses: Fetches GeoCodes -> Fetches nearest airport codes
+// Memoizes address -> airport code mapping
 export default class AirportCodeApiClient {
     static _instance;
     _knownAddressAirportMap = new Map();
@@ -17,7 +17,7 @@ export default class AirportCodeApiClient {
     static getInstance() {
         if (!AirportCodeApiClient._instance) {
             AirportCodeApiClient._instance = new AirportCodeApiClient();
-            console.log('Initliazed AirportCodeApiClient: ' + AirportCodeApiClient._instance);
+            console.log('Initialized AirportCodeApiClient: ', AirportCodeApiClient._instance);
         }
         else {
             throw new Error('AirportCodeApiClient is a singleton class, cannot create further instances.');
@@ -25,14 +25,14 @@ export default class AirportCodeApiClient {
         return AirportCodeApiClient._instance;
     }
     async checkThenFetchAirportCodes(address, accessToken) {
-        //Check for known address
+        // Check for known address
         console.log('Checking for known airport for address: ' + address + '...');
         if (this._knownAddressAirportMap.has(address)) {
             const topThreeAiportCodes = this._knownAddressAirportMap.get(address);
             const [one, two, three] = topThreeAiportCodes;
             console.log(`Retrieved from map airport codes: ${one} [${two}, ${three}]`);
             return topThreeAiportCodes;
-            //Fetch geoCode using new address
+            // Fetch geoCode using new address
         }
         else {
             console.log('... Fetching from APIs instead');
@@ -54,7 +54,7 @@ export default class AirportCodeApiClient {
                 method: 'get',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`,
+                    Authorization: `Bearer ${accessToken}`
                 }
             });
             if (!response.ok) {
@@ -87,10 +87,12 @@ export default class AirportCodeApiClient {
         try {
             console.log('Fetching geoCode...');
             const response = await fetch(geocodeApiUrl);
-            if (!response.ok) {
+            if (!response || !response.ok) {
+                console.log(response);
                 throw new Error(`Failed to fetch geocode data, HTTP status: ${response.status}`);
             }
             const data = await response.json();
+            console.log('Fetched geoCode: ' + JSON.stringify(data));
             const location = data.results[0].geometry.location;
             const validLocation = LatLngSchema.safeParse(location);
             if (validLocation.success) {
@@ -102,72 +104,73 @@ export default class AirportCodeApiClient {
             }
         }
         catch (error) {
-            throw new Error('Failed to fetch geocode data, received error: ' + error);
+            throw error;
         }
-        //Handles both user inputs and Airbnb listing addresses
+        // Handles both user inputs and Airbnb listing addresses
         function formatAddress(address) {
             // Replace commas, full stops, and other special characters with spaces
             address = address.replace(/[^\w\s]/gi, ' ');
             // Split the address into an array of words and numbers
-            let addressArray = address.split(/\s+/);
+            const addressArray = address.split(/\s+/);
             // Join the array with + symbols in between each element
-            let formattedAddress = addressArray.join('+');
+            const formattedAddress = addressArray.join('+');
             return formattedAddress;
         }
     }
 }
-//(dev) confusing shim, this should really be CityCode but I'm too lazy to change it
+// (dev) confusing shim, this should really be CityCode but I'm too lazy to change it
 function getCityCode(airportCode) {
     const airportCodeToCityCode = {
-        PEK: "BJS",
-        PKX: "BJS",
-        NAY: "BJS",
-        ORD: "CHI",
-        MDW: "CHI",
-        RFD: "CHI",
-        DEL: "DEL",
-        IXC: "DEL",
-        LKO: "DEL",
-        DXB: "DXB",
-        DWC: "DXB",
-        SHJ: "DXB",
-        FRA: "FRA",
-        HHN: "FRA",
-        FKB: "FRA",
-        IST: "IST",
-        SAW: "IST",
-        ESB: "IST",
-        CGK: "JKT",
-        HLP: "JKT",
-        BDO: "JKT",
-        LHR: "LON",
-        LGW: "LON",
-        STN: "LON",
-        LCY: "LON",
-        LAX: "LAX",
-        BUR: "LAX",
-        SNA: "LAX",
-        SVO: "MOW",
-        DME: "MOW",
-        VKO: "MOW",
-        BOM: "BOM",
-        PNQ: "BOM",
-        GOI: "BOM",
-        JFK: "NYC",
-        LGA: "NYC",
-        EWR: "NYC",
-        CDG: "PAR",
-        ORY: "PAR",
-        BVA: "PAR",
-        PVG: "SHA",
-        SHA: "SHA",
-        HSN: "SHA",
-        SYD: "SYD",
-        BNE: "SYD",
-        MEL: "SYD",
-        HND: "TYO",
-        NRT: "TYO",
-        NGO: "TYO"
+        PEK: 'BJS',
+        PKX: 'BJS',
+        NAY: 'BJS',
+        ORD: 'CHI',
+        MDW: 'CHI',
+        RFD: 'CHI',
+        DEL: 'DEL',
+        IXC: 'DEL',
+        LKO: 'DEL',
+        DXB: 'DXB',
+        DWC: 'DXB',
+        SHJ: 'DXB',
+        FRA: 'FRA',
+        HHN: 'FRA',
+        FKB: 'FRA',
+        IST: 'IST',
+        SAW: 'IST',
+        ESB: 'IST',
+        CGK: 'JKT',
+        HLP: 'JKT',
+        BDO: 'JKT',
+        LHR: 'LON',
+        LGW: 'LON',
+        STN: 'LON',
+        LCY: 'LON',
+        LAX: 'LAX',
+        BUR: 'LAX',
+        SNA: 'LAX',
+        SVO: 'MOW',
+        DME: 'MOW',
+        VKO: 'MOW',
+        BOM: 'BOM',
+        PNQ: 'BOM',
+        GOI: 'BOM',
+        JFK: 'NYC',
+        LGA: 'NYC',
+        EWR: 'NYC',
+        CDG: 'PAR',
+        ORY: 'PAR',
+        BVA: 'PAR',
+        PVG: 'SHA',
+        SHA: 'SHA',
+        HSN: 'SHA',
+        SYD: 'SYD',
+        BNE: 'SYD',
+        MEL: 'SYD',
+        HND: 'TYO',
+        NRT: 'TYO',
+        NGO: 'TYO'
     };
     return airportCodeToCityCode[airportCode] || airportCode;
 }
+//# sourceMappingURL=airportCode-api-client.class.js.map

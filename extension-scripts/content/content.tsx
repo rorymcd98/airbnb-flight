@@ -3,14 +3,14 @@ import { createRoot } from 'react-dom/client';
 import { AirbnbListingInfo, airbnbListingInfoSchema, GuestCounter} from "../types-schemas/ListingInfo";
 import { FrontendChartData, ChartMeta } from "../background/generate-frontend-chart";
 import FlightOffersChart from "../../extension-frontend/flight-offers-chart/components/FlightOffersChart";
-import { deserialize } from "v8";
+import './tailwind.css'
 
 
 //---Add 'FlightPriceRequestButton' buttons to the page---
 //React component for the FlightPriceRequestButton
 type FlightPriceRequestProps = {
   idNumber: string;
-  flightPriceRequestOnClick: (e: Event) => void;
+  flightPriceRequestOnClick: React.MouseEventHandler;
 };
 function FlightPriceRequest({idNumber, flightPriceRequestOnClick }: FlightPriceRequestProps) {
   return (
@@ -55,12 +55,12 @@ function renderFlightPriceRequestComponent(listingElements: HTMLCollectionOf<Ele
   }
 
   
-  function generateFlightPriceOnClick (idNumber: string, listingElement: HTMLElement): (e: Event) => void {
+  function generateFlightPriceOnClick (idNumber: string, listingElement: HTMLElement): React.MouseEventHandler {
     return async function(e) {
       e.stopPropagation();
 
       //Extract as much listing info as possible from the the href
-      const partialListingInfo = extractBookingDetails(listingElement) as Partial<AirbnbListingInfo>;
+      const partialListingInfo = extractBookingDetails(listingElement);
 
       const currencyCode = getCurrencyCodeFromPage();
 
@@ -184,30 +184,57 @@ function callBackgroundFlightApi(idNumber: string, listingInfo: AirbnbListingInf
     listingInfo: parsedListingInfo.data
   }
 
-  chrome.runtime.sendMessage(flightPriceRequestMessage, async function(response) {
-    if (response.type === 'flight-price-response') {
+  type FlightPriceResponse = {
+    type: 'flight-price-response',
+    frontendChartData: FrontendChartData,
+    chartMeta: ChartMeta
+  }
+  
+  function isFlightPriceResponse(obj: unknown): obj is FlightPriceResponse {
+    return (
+      typeof obj === 'object' &&
+      obj !== null &&
+      'type' in obj &&
+      obj.type === 'flight-price-response' &&
+      'frontendChartData' in obj &&
+      'chartMeta' in obj
+    );
+  }
 
-        console.log('I have been called function callBackgroundFlightApi')
-        //const deserialisedFlightOffersData = deserialisedFlightOffersData(response.flightOffersData);
-        renderChartOnPage(response.flightOffersData, response.chartMeta);
+    console.log(idNumber)
+  chrome.runtime.sendMessage(flightPriceRequestMessage, async function(response: unknown) {
+    if (isFlightPriceResponse(response)) {
+      console.log('I have been called function callBackgroundFlightApi');
+      console.log(response);
+      renderChartOnPage(response.frontendChartData, response.chartMeta, idNumber);
     } else {
       console.error("Error from background script: ", response.message, response.error);
     }
-  });  
+  });
 }
 
 //---Receive information from the background script---
 
 
 //---Display flight information on the page---
-function renderChartOnPage(frontendChartData: FrontendChartData, chartMeta: ChartMeta): void {
+function renderChartOnPage(frontendChartData: FrontendChartData, chartMeta: ChartMeta, listingId: string): void {
   console.log('I have been called function renderChartOnPage')
   
   const chartContainer = document.createElement('div');
-  chartContainer.id = 'flight-chart-container';
-  chartContainer.className = 'absolute top-0 left-0 w-full h-full z-50';
-
+  chartContainer.id = 'flight-chart-container-' + listingId;
+  chartContainer.className = 'flightChartContainer absolute top-0 left-full';
+ 
   createRoot(chartContainer).render(<FlightOffersChart flightOffersData={frontendChartData} chartMeta={chartMeta}/>)
+
+  const outerContainerId = 'request-flights-' + listingId;
+  const outerContainer = document.getElementById(outerContainerId);
+
+  console.log(outerContainerId)
+  console.log(outerContainer)
+
+  if(outerContainer){
+    outerContainer.appendChild(chartContainer);  
+  }
 }
 
 function removeChartFromPage(): void {

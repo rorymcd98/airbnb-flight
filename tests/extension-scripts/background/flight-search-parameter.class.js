@@ -7,22 +7,22 @@ export default class FlightSearchParameter {
         // maxFlightOffers: 7,
         flightFilters: {
             cabinRestrictions: [],
-            connectionRestrictions: {},
-        },
+            connectionRestrictions: {}
+        }
     };
     constructor(userPreferences, airbnbListingInfo, originAirportCodes, destinationAirportCodes) {
         const guestCounter = airbnbListingInfo.guestCounter;
         const currencyCode = airbnbListingInfo.currencyCode;
         const originDestinations = this.assembleOriginDestinations(userPreferences, airbnbListingInfo, originAirportCodes, destinationAirportCodes);
         const travelers = this.convertGuestCounterToTravelers(guestCounter);
-        const sources = ['GDS']; //Currently only one 'GDS' is accepted
+        const sources = ['GDS']; // Currently only one 'GDS' is accepted
         const searchCriteria = this.createSearchCriteria(userPreferences);
         this._flightSearchBody = {
             currencyCode,
             originDestinations,
             travelers,
             sources,
-            searchCriteria,
+            searchCriteria
         };
         const parsedFlightSearchBody = FlightSearchBodySchema.safeParse(this._flightSearchBody);
         if (!parsedFlightSearchBody.success) {
@@ -43,24 +43,23 @@ export default class FlightSearchParameter {
     ;
     createSearchCriteria(userPreferences) {
         const searchCriteria = structuredClone(FlightSearchParameter.defaultSearchCriteria);
-        //searchCriteria.flightFilters!.connectionRestrictions!.maxNumberOfConnections = userPreferences.maxStops;
+        // searchCriteria.flightFilters!.connectionRestrictions!.maxNumberOfConnections = userPreferences.maxStops;
         searchCriteria.flightFilters.cabinRestrictions = [
             {
                 cabin: userPreferences.travelClass,
                 coverage: 'ALL_SEGMENTS',
-                originDestinationIds: ['1', '2'],
-            },
+                originDestinationIds: ['1', '2']
+            }
         ];
         return searchCriteria;
     }
-    //Converting guestCounter from the listing, to travelers for the API
+    // Converting guestCounter from the listing, to travelers for the API
     convertGuestCounterToTravelers(guestCounter) {
         const travelersRes = [];
-        ;
         const guestTypeToTravelerType = {
-            'adultsCount': 'ADULT',
-            'childrenCount': 'CHILD',
-            'infantsCount': 'SEATED_INFANT',
+            adultsCount: 'ADULT',
+            childrenCount: 'CHILD',
+            infantsCount: 'SEATED_INFANT'
         };
         let idCounter = 1;
         // Iterate through each guest type (adultsCount, childrenCount, infantsCount) adding its count
@@ -71,7 +70,7 @@ export default class FlightSearchParameter {
             for (let i = 0; i < guestCount; i++) {
                 const traveler = {
                     id: idCounter.toString(),
-                    travelerType,
+                    travelerType
                 };
                 travelersRes.push(traveler);
                 idCounter++;
@@ -119,7 +118,7 @@ export default class FlightSearchParameter {
         const [time, timeWindow] = this.calculateDepartureTimeAndTimeWindow(userPreferences, giveOutbound);
         return {
             date: airbnbListingInfo[flightDateKey].toISOString().split('T')[0],
-            dateWindow: 'I3D', // +/- 3 days , in order to find better flight days
+            dateWindow: 'I3D' // +/- 3 days , in order to find better flight days
             // time: time,
             // timeWindow: timeWindow,
         };
@@ -141,3 +140,4 @@ export default class FlightSearchParameter {
         }
     }
 }
+//# sourceMappingURL=flight-search-parameter.class.js.map

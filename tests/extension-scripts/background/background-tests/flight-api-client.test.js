@@ -6,7 +6,7 @@ describe('FlightApiClient class', () => {
             originLocation: 'London',
             searchOutboundFlight: true,
             searchReturnFlight: true,
-            travelClass: "ECONOMY",
+            travelClass: 'ECONOMY',
             maxStops: 1,
             outboundTimeWindow: {
                 earliestDepartureTime: 6,
@@ -28,3 +28,4 @@ describe('FlightApiClient class', () => {
         }).toThrowError('FlightApiClient is a singleton class, cannot create further instances.');
     });
 });
+//# sourceMappingURL=flight-api-client.test.js.map

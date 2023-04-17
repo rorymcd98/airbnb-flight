@@ -9,3 +9,4 @@ describe('AirportCodeClient class', () => {
         }).toThrowError('AirportCodeApiClient is a singleton class, cannot create further instances.');
     });
 });
+//# sourceMappingURL=airportCode-api-client.test.js.map

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 /**
  * Interfaces for Airbnb related data obtained from the DOM
  * shared by background and content scripts
@@ -15,5 +15,6 @@ export const airbnbListingInfoSchema = z.object({
     guestCounter: guestCounterSchema,
     currencyCode: z.string().regex(/^[A-Z]{3}$/)
 }).refine((data) => data.outboundDate < data.returnDate, {
-    message: "Outbound date must be before return date",
+    message: 'Outbound date must be before return date'
 });
+//# sourceMappingURL=ListingInfo.js.map

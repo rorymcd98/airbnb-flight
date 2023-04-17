@@ -23,7 +23,11 @@ export default defineConfig({
     emptyOutDir: true,
     target: 'chrome88',
     assetsDir: 'extension-frontend/src/assets',
-    manifest: false,
+    rollupOptions: {
+      output:{
+        sourcemap: false
+      }
+    }
   },
   server: {
     open: './extension-frontend/dev-view/dev.html'

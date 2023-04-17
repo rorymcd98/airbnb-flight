@@ -19,7 +19,9 @@
     "outDir": "./tests/",
     "rootDir": "./",
     "declaration": true,
-    "declarationDir": "./extension-scripts/dist/@types"
+    "declarationDir": "./extension-scripts/dist/@types",
+    "sourceMap": true,
+    "noImplicitAny": true
   },
   "include": [
     // "extension-scripts/**/**.test.**",

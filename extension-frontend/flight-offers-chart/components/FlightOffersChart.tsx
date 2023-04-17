@@ -184,7 +184,7 @@ const FlightOffersChart: React.FC<FlightDataChartProps> = ({flightOffersData, ch
     }
 
   return (
-    <div className="bg-gray-200  p-3 rounded-md shadow-xl border-2 border-red-500">
+    <div className="bg-gray-200 p-3 rounded-md shadow-xl border-2 border-red-500" style={{width: "clamp(200px, 15vw, 450px)"}}>
       <div className="flex justify-end items-center">
         {selectedOutboundDate && (
           <button
